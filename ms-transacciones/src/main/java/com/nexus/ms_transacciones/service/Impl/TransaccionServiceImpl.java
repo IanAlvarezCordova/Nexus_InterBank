@@ -92,17 +92,18 @@ public class TransaccionServiceImpl implements TransaccionService {
             tx.setFechaEjecucion(LocalDateTime.now());
 
         } catch (Exception e) {
-            log.error("SAGA FALLO: {}", e.getMessage());
+            log.error(">>> SAGA FALLO GRAVE: {}", e.getMessage(), e);
 
             // 4. COMPENSACIÓN (Deshacer)
             if ("PENDING".equals(tx.getEstado())) {
                 try {
                     // Solo compensamos si el dinero salió (si el error no fue SaldoInsuficiente)
                     if (!e.getMessage().contains("Fondos insuficientes")) {
+                        log.info(">>> INICIANDO COMPENSACION para cuenta {}", tx.getCuentaOrigen());
                         cuentaClient.compensar(tx.getCuentaOrigen(), tx.getMonto());
                     }
                 } catch (Exception exComp) {
-                    log.error("ERROR GRAVE: Fallo compensación manual");
+                    log.error(">>> ERROR GRAVE: Fallo compensación manual", exComp);
                 }
                 tx.setEstado("FAILED");
                 tx.setDescripcion("Error: " + e.getMessage());

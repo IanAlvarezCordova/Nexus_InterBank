@@ -16,34 +16,40 @@ public class CuentaClient {
     private final String urlCompleta;
 
     // Eliminamos @RequiredArgsConstructor para usar este constructor manual
-    // @Value inyectará la URL desde application.properties o variables de entorno de AWS
+    // @Value inyectará la URL desde application.properties o variables de entorno
+    // de AWS
     public CuentaClient(RestTemplate restTemplate, @Value("${api.cuentas.url}") String urlBase) {
         this.restTemplate = restTemplate;
         this.urlCompleta = urlBase + "/api/v1/cuentas";
+        log.info(">>> CuentaClient inicializado con URL: {}", this.urlCompleta);
     }
 
     public void debitar(String cuenta, BigDecimal monto) {
         try {
-            log.info("Llamando a débito en: {} para cuenta: {}", urlCompleta, cuenta);
-            record Req(String cuenta, BigDecimal monto) {}
+            log.info(">>> Iniciando DEBITO en: {}/debito para cuenta: {}", urlCompleta, cuenta);
+            record Req(String cuenta, BigDecimal monto) {
+            }
             restTemplate.postForEntity(urlCompleta + "/debito", new Req(cuenta, monto), Void.class);
+            log.info(">>> DEBITO exitoso");
         } catch (HttpClientErrorException.Conflict | HttpClientErrorException.BadRequest e) {
-            log.error("Fallo debito por saldo: {}", e.getMessage());
+            log.error(">>> FALLO DEBITO (Saldo): {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new SaldoInsuficienteException("Fondos insuficientes en la cuenta origen");
         } catch (Exception e) {
-            log.error("Error de conexión con MS-CUENTAS: {}", e.getMessage());
-            throw new RuntimeException("Servicio de cuentas no disponible");
+            log.error(">>> ERROR CONEXION MS-CUENTAS en DEBITO: {}", e.getMessage(), e);
+            throw new RuntimeException("Servicio de cuentas no disponible: " + e.getMessage());
         }
     }
 
     public void acreditar(String cuenta, BigDecimal monto) {
         try {
-            log.info("Llamando a crédito en: {} para cuenta: {}", urlCompleta, cuenta);
-            record Req(String cuenta, BigDecimal monto) {}
+            log.info(">>> Iniciando CREDITO en: {}/credito para cuenta: {}", urlCompleta, cuenta);
+            record Req(String cuenta, BigDecimal monto) {
+            }
             restTemplate.postForEntity(urlCompleta + "/credito", new Req(cuenta, monto), Void.class);
+            log.info(">>> CREDITO exitoso");
         } catch (Exception e) {
-            log.error("Fallo credito en SAGA: {}", e.getMessage());
-            throw new RuntimeException("Error crítico al acreditar fondos");
+            log.error(">>> ERROR CONEXION MS-CUENTAS en CREDITO: {}", e.getMessage(), e);
+            throw new RuntimeException("Error crítico al acreditar fondos: " + e.getMessage());
         }
     }
 

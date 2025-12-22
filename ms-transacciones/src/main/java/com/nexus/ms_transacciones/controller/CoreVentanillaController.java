@@ -51,9 +51,11 @@ public class CoreVentanillaController {
         try {
             // 1. Buscar cliente en ms-clientes
             String urlCliente = clientesUrl + "/api/v1/clientes/buscar/" + cedula;
+            log.info(">>> Core Ventanilla: Llamando a MS-CLIENTES: {}", urlCliente);
             Map<String, Object> clienteData = restTemplate.getForObject(urlCliente, Map.class);
 
             if (clienteData == null) {
+                log.warn(">>> MS-CLIENTES retornó null para cédula {}", cedula);
                 return ResponseEntity.notFound().build();
             }
 
@@ -68,6 +70,7 @@ public class CoreVentanillaController {
 
             // 2. Obtener cuentas del cliente desde ms-cuentas
             String urlCuentas = cuentasUrl + "/api/cuentas?clienteId=" + clienteId;
+            log.info(">>> Core Ventanilla: Llamando a MS-CUENTAS: {}", urlCuentas);
             List<Map<String, Object>> cuentasData = restTemplate.getForObject(urlCuentas, List.class);
 
             // 3. Armar respuesta
