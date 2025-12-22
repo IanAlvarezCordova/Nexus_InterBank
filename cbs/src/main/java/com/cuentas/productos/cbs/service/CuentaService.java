@@ -61,6 +61,7 @@ public class CuentaService {
         return CuentaMapper.toResponse(cuenta);
     }
 
+    @Transactional(readOnly = true)
     public List<CuentaResponse> listarPorCliente(Integer clienteId) {
         return cuentaRepo.findByClienteId(clienteId).stream()
                 .map(c -> {
