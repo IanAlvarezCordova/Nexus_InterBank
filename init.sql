@@ -20,8 +20,8 @@ CREATE SCHEMA IF NOT EXISTS nexus_ventanilla;
 
 -- Los siguientes comandos deben ejecutarse DESPUÉS de que los servicios hayan creado las tablas:
 -- 
--- INSERT INTO public.tipocuenta (nombre, descripcion, estado, tipoamortizacion) 
--- VALUES 
---   ('AHORROS', 'Cuenta de Ahorros', 'ACTIVO', 'MENSUAL'),
---   ('CORRIENTE', 'Cuenta Corriente', 'ACTIVO', 'MENSUAL')
--- ON CONFLICT DO NOTHING;
+INSERT INTO public.tipocuenta (nombre, descripcion, estado, tipoamortizacion) 
+VALUES 
+  ('AHORROS', 'Cuenta de Ahorros', 'ACTIVO', 'MENSUAL'),
+  ('CORRIENTE', 'Cuenta Corriente', 'ACTIVO', 'MENSUAL')
+ON CONFLICT DO NOTHING;

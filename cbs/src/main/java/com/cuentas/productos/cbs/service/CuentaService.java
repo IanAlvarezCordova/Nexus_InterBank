@@ -63,7 +63,16 @@ public class CuentaService {
 
     public List<CuentaResponse> listarPorCliente(Integer clienteId) {
         return cuentaRepo.findByClienteId(clienteId).stream()
-                .map(CuentaMapper::toResponse)
+                .map(c -> {
+                    try {
+                        return CuentaMapper.toResponse(c);
+                    } catch (Exception e) {
+                        // Log error but continue
+                        System.err.println("Error mapping cuenta " + c.getId() + ": " + e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(java.util.Objects::nonNull)
                 .toList();
     }
 
