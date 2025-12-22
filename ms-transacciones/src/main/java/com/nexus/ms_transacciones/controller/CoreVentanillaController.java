@@ -69,9 +69,15 @@ public class CoreVentanillaController {
             String nombres = clienteData.get("nombres") + " " + clienteData.get("apellidos");
 
             // 2. Obtener cuentas del cliente desde ms-cuentas
-            String urlCuentas = cuentasUrl + "/api/cuentas?clienteId=" + clienteId;
-            log.info(">>> Core Ventanilla: Llamando a MS-CUENTAS: {}", urlCuentas);
-            List<Map<String, Object>> cuentasData = restTemplate.getForObject(urlCuentas, List.class);
+            List<Map<String, Object>> cuentasData = new ArrayList<>();
+            try {
+                String urlCuentas = cuentasUrl + "/api/cuentas?clienteId=" + clienteId;
+                log.info(">>> Core Ventanilla: Llamando a MS-CUENTAS: {}", urlCuentas);
+                cuentasData = restTemplate.getForObject(urlCuentas, List.class);
+            } catch (Exception exCuentas) {
+                log.error(">>> ERROR obteniendo cuentas: {}", exCuentas.getMessage());
+                // No lanzamos excepcion, simplemente el cliente vendrá sin cuentas
+            }
 
             // 3. Armar respuesta
             ResumenClienteDTO resumen = new ResumenClienteDTO();
