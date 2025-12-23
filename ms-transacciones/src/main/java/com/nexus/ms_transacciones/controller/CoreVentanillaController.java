@@ -71,7 +71,7 @@ public class CoreVentanillaController {
             // 2. Obtener cuentas del cliente desde ms-cuentas
             List<Map<String, Object>> cuentasData = new ArrayList<>();
             try {
-                String urlCuentas = cuentasUrl + "/api/cuentas?clienteId=" + clienteId;
+                String urlCuentas = cuentasUrl + "/api/v1/cuentas?clienteId=" + clienteId;
                 log.info(">>> Core Ventanilla: Llamando a MS-CUENTAS: {}", urlCuentas);
                 cuentasData = restTemplate.getForObject(urlCuentas, List.class);
             } catch (Exception exCuentas) {
@@ -133,7 +133,7 @@ public class CoreVentanillaController {
 
         try {
             // 1. Buscar cuenta
-            String urlCuenta = cuentasUrl + "/api/cuentas/por-numero/" + numeroCuenta;
+            String urlCuenta = cuentasUrl + "/api/v1/cuentas/por-numero/" + numeroCuenta;
             Map<String, Object> cuentaData = restTemplate.getForObject(urlCuenta, Map.class);
 
             if (cuentaData == null) {
@@ -185,7 +185,7 @@ public class CoreVentanillaController {
                         throw new RuntimeException("Cuenta destino requerida para transferencias");
                     }
                     // Validar que la cuenta destino exista
-                    String urlValidar = cuentasUrl + "/api/cuentas/por-numero/" + req.getCuentaDestino();
+                    String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
                     Map<String, Object> destino = restTemplate.getForObject(urlValidar, Map.class);
                     if (destino == null) {
                         throw new RuntimeException("Cuenta destino no existe");
@@ -214,7 +214,7 @@ public class CoreVentanillaController {
             @RequestParam String estado) {
         log.info(">>> Core Ventanilla: Cambiar estado cuenta {} a {}", numeroCuenta, estado);
 
-        String url = cuentasUrl + "/api/cuentas/" + numeroCuenta + "/estado?estado=" + estado;
+        String url = cuentasUrl + "/api/v1/cuentas/" + numeroCuenta + "/estado?estado=" + estado;
         restTemplate.put(url, null);
         return ResponseEntity.ok("Estado de cuenta actualizado");
     }
@@ -240,7 +240,7 @@ public class CoreVentanillaController {
     public ResponseEntity<String> eliminarCuenta(@PathVariable String numeroCuenta) {
         log.info(">>> Core Ventanilla: Eliminar cuenta {}", numeroCuenta);
 
-        String url = cuentasUrl + "/api/cuentas/" + numeroCuenta;
+        String url = cuentasUrl + "/api/v1/cuentas/" + numeroCuenta;
         restTemplate.delete(url);
         return ResponseEntity.ok("Cuenta eliminada");
     }
