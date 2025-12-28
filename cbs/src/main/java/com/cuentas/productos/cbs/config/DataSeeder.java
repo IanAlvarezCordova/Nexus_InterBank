@@ -14,25 +14,26 @@ public class DataSeeder {
     @Transactional
     CommandLineRunner seedTiposCuenta(TipoCuentaRepository repo) {
         return args -> {
-            // Tipo 1: Cuenta de Ahorros (AHORROS)
-            if (!repo.existsByNombre("Cuenta de Ahorros")) {
-                TipoCuenta ahorros = new TipoCuenta();
-                ahorros.setNombre("Cuenta de Ahorros");
-                ahorros.setDescripcion("AHORROS");
-                ahorros.setEstado("ACTIVO");
-                ahorros.setTipoAmortizacion("MENSUAL");
-                repo.save(ahorros);
+            // Si ya existen registros, no sembrar (idempotente y evita conflictos de secuencia)
+            if (repo.count() > 0) {
+                return;
             }
 
+            // Tipo 1: Cuenta de Ahorros (AHORROS)
+            TipoCuenta ahorros = new TipoCuenta();
+            ahorros.setNombre("Cuenta de Ahorros");
+            ahorros.setDescripcion("AHORROS");
+            ahorros.setEstado("ACTIVO");
+            ahorros.setTipoAmortizacion("MENSUAL");
+            repo.save(ahorros);
+
             // Tipo 2: Cuenta Corriente (CORRIENTE)
-            if (!repo.existsByNombre("Cuenta Corriente")) {
-                TipoCuenta corriente = new TipoCuenta();
-                corriente.setNombre("Cuenta Corriente");
-                corriente.setDescripcion("CORRIENTE");
-                corriente.setEstado("ACTIVO");
-                corriente.setTipoAmortizacion("MENSUAL");
-                repo.save(corriente);
-            }
+            TipoCuenta corriente = new TipoCuenta();
+            corriente.setNombre("Cuenta Corriente");
+            corriente.setDescripcion("CORRIENTE");
+            corriente.setEstado("ACTIVO");
+            corriente.setTipoAmortizacion("MENSUAL");
+            repo.save(corriente);
         };
     }
 }
