@@ -19,18 +19,18 @@ public class DataSeeder {
                 return;
             }
 
-            // Tipo 1: Cuenta de Ahorros (AHORROS)
+            // Tipo 1: AHORROS (Cuenta de Ahorros)
             TipoCuenta ahorros = new TipoCuenta();
-            ahorros.setNombre("Cuenta de Ahorros");
-            ahorros.setDescripcion("AHORROS");
+            ahorros.setNombre("AHORROS");
+            ahorros.setDescripcion("Cuenta de Ahorros");
             ahorros.setEstado("ACTIVO");
             ahorros.setTipoAmortizacion("MENSUAL");
             repo.save(ahorros);
 
-            // Tipo 2: Cuenta Corriente (CORRIENTE)
+            // Tipo 2: CORRIENTE (Cuenta Corriente)
             TipoCuenta corriente = new TipoCuenta();
-            corriente.setNombre("Cuenta Corriente");
-            corriente.setDescripcion("CORRIENTE");
+            corriente.setNombre("CORRIENTE");
+            corriente.setDescripcion("Cuenta Corriente");
             corriente.setEstado("ACTIVO");
             corriente.setTipoAmortizacion("MENSUAL");
             repo.save(corriente);
