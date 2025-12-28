@@ -1,0 +1,97 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: nexus-gateway
+  cloud:
+    gateway:
+      globalcors:
+        # IMPORTANTE: Esto fuerza a que el Gateway responda al Preflight (OPTIONS)
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"  # ← Cambiado de allowedOrigins a allowedOriginPatterns
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true  # ← Cambiado a true
+            maxAge: 3600
+      routes:
+        # --- RUTAS CORE ---
+        - id: nexus-ms-transacciones
+          uri: http://nexus-ms-transacciones:8082
+          predicates:
+            - Path=/api/v1/transacciones/**, /api/v1/switch/**
+
+        - id: nexus-ms-cuentas
+          uri: http://nexus-ms-cuentas:8083
+          predicates:
+            - Path=/api/cuentas/**, /api/tasas/**, /api/tipos-cuenta/**
+
+        - id: nexus-ms-clientes
+          uri: http://nexus-ms-clientes:8084
+          predicates:
+            - Path=/api/v1/clientes/**
+
+        - id: nexus-ms-geografia
+          uri: http://nexus-ms-geografia:8081
+          predicates:
+            - Path=/api/entidad/**, /api/feriado/**, /api/sucursal/**, /api/ubicacion/**, /api/geografia/**
+
+        # --- RUTAS WEB (AUTH, UTIL Y WEB) ---
+        - id: web-backend
+          uri: http://web-backend:8082
+          predicates:
+            - Path=/api/web/**, /api/auth/**, /api/util/**
+
+        # --- RUTAS VENTANILLA ---
+        - id: ventanilla-backend
+          uri: http://ventanilla-backend:8083
+          predicates:
+            - Path=/api/ventanilla/**
+            # No Filters needed as backend accepts /api/ventanilla/...
+
+        # --- RUTAS SWAGGER ---
+        - id: openapi-transacciones
+          uri: http://nexus-ms-transacciones:8082
+          predicates:
+            - Path=/v3/api-docs/transacciones
+          filters:
+            - RewritePath=/v3/api-docs/transacciones, /v3/api-docs
+        - id: openapi-cuentas
+          uri: http://nexus-ms-cuentas:8083
+          predicates:
+            - Path=/v3/api-docs/cuentas
+          filters:
+            - RewritePath=/v3/api-docs/cuentas, /v3/api-docs
+        - id: openapi-clientes
+          uri: http://nexus-ms-clientes:8084
+          predicates:
+            - Path=/v3/api-docs/clientes
+          filters:
+            - RewritePath=/v3/api-docs/clientes, /v3/api-docs
+        - id: openapi-geografia
+          uri: http://nexus-ms-geografia:8081
+          predicates:
+            - Path=/v3/api-docs/geografia
+          filters:
+            - RewritePath=/v3/api-docs/geografia, /v3/api-docs
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: '1. Transacciones'
+        url: /v3/api-docs/transacciones
+      - name: '2. Cuentas'
+        url: /v3/api-docs/cuentas
+      - name: '3. Clientes'
+        url: /v3/api-docs/clientes
+      - name: '4. Geografía'
+        url: /v3/api-docs/geografia

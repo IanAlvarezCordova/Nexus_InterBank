@@ -1,0 +1,132 @@
+services:
+  # --- INFRAESTRUCTURA ---
+  postgres-db-nexus:
+    image: postgres:15-alpine
+    container_name: postgres-db-nexus
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports: [ "5433:5432" ]
+    networks: [ nexus-net ]
+
+  mongo-db-nexus:
+    image: mongo:latest
+    container_name: mongo-db-nexus
+    ports: [ "27018:27017" ]
+    networks: [ nexus-net ]
+
+  # --- GATEWAY (Puerto 9080) ---
+  nexus-gateway:
+    build: ./gateway-server
+    container_name: nexus-gateway
+    ports: [ "9080:8080" ]
+    depends_on:
+      - nexus-ms-transacciones
+      - nexus-ms-cuentas
+      - nexus-ms-clientes
+      - nexus-ms-geografia
+      - web-backend
+      - ventanilla-backend
+    environment:
+      - EUREKA_CLIENT_ENABLED=false
+      # NOTA: Las rutas se cargan desde src/main/resources/application.yml
+      # No inyectamos SPRING_CLOUD_GATEWAY_ROUTES por ENV para evitar conflictos.
+    networks: [ nexus-net ]
+
+  # --- CORE BANCARIO ---
+  nexus-ms-cuentas:
+    build: ./cbs
+    container_name: nexus-ms-cuentas
+    environment:
+      - DB_HOST=postgres-db-nexus
+      - DB_PASSWORD=admin
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=public
+    networks: [ nexus-net ]
+
+  nexus-ms-clientes:
+    build: ./ms-clientes
+    container_name: nexus-ms-clientes
+    environment:
+      - DB_HOST=postgres-db-nexus
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=public
+    networks: [ nexus-net ]
+
+  nexus-ms-geografia:
+    build: ./ms-geografiaMongo
+    container_name: nexus-ms-geografia
+    environment:
+      - MONGO_URI=mongodb://mongo-db-nexus:27017/db_geo_nexus
+      - EUREKA_CLIENT_ENABLED=false
+    networks: [ nexus-net ]
+
+  nexus-ms-transacciones:
+    build: ./ms-transacciones
+    container_name: nexus-ms-transacciones
+    environment:
+      - DB_HOST=postgres-db-nexus
+      - DB_PASSWORD=admin
+      - URL_MS_CUENTAS=http://nexus-ms-cuentas:8083
+      - URL_MS_GEOGRAFIA=http://nexus-ms-geografia:8081
+      - URL_MS_CLIENTES=http://nexus-ms-clientes:8084
+      - EUREKA_CLIENT_ENABLED=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=public
+      # Switch DIGICONECU en la Nube (IP real del ecosistema)
+      - APP_SWITCH_URL=http://34.44.123.236:9080
+      - APP_SWITCH_NETWORK_URL=http://34.44.123.236:9080
+      - BANCO_CODIGO=NEXUS
+    ports: [ "8082:8082" ]
+    networks: [ nexus-net ]
+
+  # --- SERVICIO WEB ---
+  web-backend:
+    build: ./Web/BackEnd_Nexus
+    container_name: web-backend
+    environment:
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=nexus_web
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ECUSOL_CORE_URL=http://nexus-gateway:8080/api
+    networks: [ nexus-net ]
+
+  front-web:
+    build: ./Web/Frontend_Nexus
+    container_name: front-web
+    ports: [ "8080:80" ]
+    networks: [ nexus-net ]
+
+  # --- SERVICIO VENTANILLA ---
+  ventanilla-backend:
+    build: ./Ventanilla/BackEnd_VENTANILLA
+    container_name: ventanilla-backend
+    ports: [ "8085:8083" ]
+    depends_on:
+      - postgres-db-nexus
+    environment:
+      - SERVER_PORT=8083
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=nexus_ventanilla
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ECUSOL_CORE_URL=http://nexus-gateway:8080/api/core
+    networks: [ nexus-net ]
+
+  front-ventanilla:
+    build: ./Ventanilla/FrontEnd_Nexus
+    container_name: front-ventanilla
+    ports: [ "81:80" ]
+    networks: [ nexus-net ]
+
+networks:
+  nexus-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

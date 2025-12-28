@@ -1,0 +1,33 @@
+# =============================================
+# CONFIGURACIÓN DE BASE DE DATOS POSTGRESQL (ECUSOL)
+# =============================================
+spring.datasource.url=jdbc:postgresql://localhost:5432/ecusol
+spring.datasource.username=postgres
+spring.datasource.password=admin
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# =============================================
+# JPA / HIBERNATE
+# =============================================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+
+# =============================================
+# JWT CONFIGURATION
+# =============================================
+jwt.secret=MiClaveSecretaSuperLarga2025EcuSolBank1234567890abcdef1234567890
+jwt.expiration-ms=86400000
+
+# =============================================
+# SERVER CONFIG (opcional pero recomendado)
+# =============================================
+server.servlet.context-path=
+server.port=8080
+
+# =============================================
+# LOGGING (opcional, para ver queries bonitas)
+# =============================================
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
