@@ -62,26 +62,60 @@ public class TransaccionServiceImpl implements TransaccionService {
                 // --- TRANSFERENCIA EXTERNA (DIGICONECU) ---
                 String bancoDestino = solicitud.getBancoDestinoCodigo() != null
                         ? solicitud.getBancoDestinoCodigo()
-                        : "BANTEC"; // Default si solo viene bancoDestinoId
+                        : "BANTEC"; // Default
 
-                SwitchTransferRequest switchRequest = SwitchTransferRequest.builder()
-                        .instructionId(tx.getInstructionId())
-                        .bancoOrigen(switchClient.getBancoCodigo()) // NEXUS
-                        .bancoDestino(bancoDestino)
-                        .cuentaOrigen(tx.getCuentaOrigen())
-                        .cuentaDestino(tx.getCuentaDestino())
-                        .monto(tx.getMonto())
-                        .moneda("USD")
-                        .concepto(tx.getDescripcion() != null ? tx.getDescripcion() : "Transferencia interbancaria")
+                // CONSTRUCCION ISO 20022
+                com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO header = com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO
+                        .builder()
+                        .messageId("MSG-" + System.currentTimeMillis())
+                        .creationDateTime(java.time.Instant.now().toString())
+                        .originatingBankId(switchClient.getBancoCodigo())
                         .build();
 
-                SwitchTransferResponse response = switchClient.enviarTransferencia(switchRequest);
+                com.nexus.ms_transacciones.dto.iso.IsoAmountDTO amount = com.nexus.ms_transacciones.dto.iso.IsoAmountDTO
+                        .builder()
+                        .currency("USD")
+                        .value(tx.getMonto())
+                        .build();
 
-                if (response == null || !response.isSuccess()) {
-                    String errorMsg = response != null ? response.getError() : "Sin respuesta del Switch";
-                    throw new RuntimeException("Switch rechazó la transferencia: " + errorMsg);
+                com.nexus.ms_transacciones.dto.iso.IsoAccountDTO debtor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
+                        .builder()
+                        .name("Cliente Nexus") // Idealmente obtener nombre real
+                        .accountId(tx.getCuentaOrigen())
+                        .accountType("CHECKING")
+                        .build();
+
+                com.nexus.ms_transacciones.dto.iso.IsoAccountDTO creditor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
+                        .builder()
+                        .name("Cliente Externo")
+                        .accountId(tx.getCuentaDestino())
+                        .accountType("SAVINGS")
+                        .targetBankId(bancoDestino)
+                        .build();
+
+                com.nexus.ms_transacciones.dto.iso.IsoBodyDTO body = com.nexus.ms_transacciones.dto.iso.IsoBodyDTO
+                        .builder()
+                        .instructionId(tx.getInstructionId())
+                        .endToEndId("REF-" + tx.getInstructionId())
+                        .amount(amount)
+                        .debtor(debtor)
+                        .creditor(creditor)
+                        .build();
+
+                com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO isoRequest = com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO
+                        .builder()
+                        .header(header)
+                        .body(body)
+                        .build();
+
+                com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO response = switchClient
+                        .enviarTransferencia(isoRequest);
+
+                if (response == null) {
+                    throw new RuntimeException("Sin respuesta del Switch");
                 }
 
+                // Si llegamos aquí es 200/201 OK porque RestTemplate lanza excepción en 4xx/5xx
                 log.info("✅ Transferencia INTERBANCARIA enviada al Switch: {} -> {}",
                         tx.getCuentaOrigen(), bancoDestino);
             }

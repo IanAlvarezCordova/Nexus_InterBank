@@ -8,11 +8,10 @@ import { CheckCircle2, User, Users, Loader2, AlertTriangle, Wallet, ArrowRight, 
 import { toast } from 'react-hot-toast';
 
 const BANCOS_TERCEROS = [
-  { id: 'ECUASOL', nombre: 'Nexus', color: 'bg-blue-600' },
-  { id: 'ECUSOL', nombre: 'EcuSol', color: 'bg-green-500' },
-  { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
+  { id: 'ECUASOL', nombre: 'Nexus (Propio)', color: 'bg-blue-600' },
   { id: 'BANTEC', nombre: 'BanTec', color: 'bg-purple-500' },
-  { id: 'OTRO', nombre: 'Otro', color: 'bg-gray-500' }
+  { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
+  { id: 'ECUSOL', nombre: 'EcuSol', color: 'bg-green-500' }
 ];
 
 const PaginaTransferencia = () => {
@@ -141,7 +140,13 @@ const PaginaTransferencia = () => {
       if (tipoInterno === 'TERCERO' && !destinatarioData) { toast.error("Valida la cuenta primero"); return; }
       if (tipoInterno === 'PROPIA' && origen === destinoPropio) { toast.error("Cuentas iguales"); return; }
     } else {
-      if (!destinatarioData) { toast.error("Valida la cuenta primero"); return; }
+      // MODO INTERBANCARIO: No requerimos validación estricta de cuenta (nombre titular)
+      // porque no tenemos acceso a la base de clientes de otros bancos.
+      // Solo aseguramos que se haya escrito una cuenta.
+      if (!destinoManual || destinoManual.length < 5) {
+        toast.error("Ingresa una cuenta válida");
+        return;
+      }
     }
 
     const cOrigen = misCuentas.find(c => c.numeroCuenta === origen);

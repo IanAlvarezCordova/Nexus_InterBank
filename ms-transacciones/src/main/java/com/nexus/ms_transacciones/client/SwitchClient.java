@@ -35,23 +35,43 @@ public class SwitchClient {
     @Value("${banco.codigo:NEXUS}")
     private String bancoCodigo;
 
+    @Value("${api.key:NEXUS_SECRET_KEY}")
+    private String apiKey;
+
     /**
      * Envía una transferencia interbancaria al Switch DIGICONECU.
-     * Endpoint: POST /api/v2/transfers
+     * Endpoint: POST /api/switch/v1/transferir
      */
-    public SwitchTransferResponse enviarTransferencia(SwitchTransferRequest request) {
-        String url = switchUrl + "/api/v2/transfers";
-        log.info("📤 Enviando transferencia al Switch: {} -> {}",
-                request.getCuentaOrigen(), request.getCuentaDestino());
+    public com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO enviarTransferencia(
+            com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO request) {
+        // CORRECCIÓN URL: Según guía usuario "http://IP:8000/api/switch/v1/transferir"
+        // Aseguramos que switchUrl apunte a la base correcta o ajustamos aquí.
+        // Asumiremos que switchUrl ya trae la base (ej: http://34.44.123.236:9080)
+        String url = switchUrl + "/api/switch/v1/transferir";
+
+        log.info("📤 Enviando transferencia ISO 20022 al Switch: {} -> {}",
+                request.getBody().getDebtor().getAccountId(),
+                request.getBody().getCreditor().getAccountId());
 
         try {
-            ResponseEntity<SwitchTransferResponse> response = restTemplate.postForEntity(url, request,
-                    SwitchTransferResponse.class);
+            // Headers
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("apikey", apiKey);
 
-            log.info("✅ Respuesta del Switch: {}", response.getBody());
+            org.springframework.http.HttpEntity<com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO> entity = new org.springframework.http.HttpEntity<>(
+                    request, headers);
+
+            ResponseEntity<com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO> response = restTemplate.postForEntity(url,
+                    entity,
+                    com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO.class);
+
+            log.info("✅ Respuesta del Switch: {}", response.getStatusCode());
             return response.getBody();
         } catch (Exception e) {
             log.error("❌ Error enviando al Switch: {}", e.getMessage());
+            // Retornamos null o lanzamos excepción según lógica negocio
+            // Para mantener compatibilidad con servicio existente:
             throw new RuntimeException("Error comunicándose con el Switch: " + e.getMessage());
         }
     }

@@ -1,7 +1,0 @@
-{
-    "cuentaOrigen": "2701000001",
-    "cuentaDestino": "2201000001",
-    "monto": 10.00,
-    "bancoDestinoCodigo": "BANTEC",
-    "descripcion": "Test File Curl"
-}

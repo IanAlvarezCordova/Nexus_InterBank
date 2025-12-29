@@ -1,0 +1,41 @@
+name: Despliegue a AWS
+
+# Esto indica que se ejecute cuando haces push a la rama 'master'
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conectando y Desplegando por SSH
+        # Usamos una acción prefabricada muy famosa llamada appleboy/ssh-action
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          # AQUI abajo van los comandos que se ejecutarán en tu AWS
+          script: |
+            echo "Conexión exitosa, iniciando despliegue..."
+            
+            # 1. Navegar a la carpeta de tu proyecto (AJUSTAR ESTA RUTA SI ES DIFERENTE)
+            cd Nexus_InterBank
+            
+            # 2. Asegurar estar en la rama master
+            git checkout master
+            
+            # 3. Bajar los cambios nuevos
+            git pull origin master
+            
+            # 4. Reconstruir y levantar contenedores
+            # Eliminamos contenedores huérfanos para limpiar
+            docker-compose up -d --build --remove-orphans
+            
+            # Opcional: Limpieza de sistema para ahorrar espacio en la EC2
+            docker system prune -f
+            
+            echo "¡Despliegue completado!"
