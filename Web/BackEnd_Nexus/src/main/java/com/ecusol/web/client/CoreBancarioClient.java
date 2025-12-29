@@ -96,7 +96,7 @@ public class CoreBancarioClient {
 
     public List<SucursalDTO> obtenerSucursales() {
         try {
-            return webClient.get().uri("/sucursales").retrieve().bodyToFlux(SucursalDTO.class).collectList().block();
+            return webClient.get().uri("/sucursal").retrieve().bodyToFlux(SucursalDTO.class).collectList().block();
         } catch (Exception e) {
             return List.of();
         }

@@ -77,8 +77,8 @@ services:
       - EUREKA_CLIENT_ENABLED=false
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=public
       # Switch DIGICONECU en la Nube (IP real del ecosistema)
-      - APP_SWITCH_URL=http://34.44.123.236:9080
-      - APP_SWITCH_NETWORK_URL=http://34.44.123.236:9080
+      - APP_SWITCH_URL=http://3.140.230.212:9080
+      - APP_SWITCH_NETWORK_URL=http://3.140.230.212:9080
       - BANCO_CODIGO=NEXUS
     ports: [ "8082:8082" ]
     networks: [ nexus-net ]
