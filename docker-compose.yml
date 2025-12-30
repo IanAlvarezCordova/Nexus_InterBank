@@ -121,8 +121,27 @@ services:
   front-ventanilla:
     build: ./Ventanilla/FrontEnd_Nexus
     container_name: front-ventanilla
-    ports: [ "81:80" ]
+    ports: [ "8081:80" ]
     networks: [ nexus-net ]
+    # --- AGREGADO: NGINX PROXY MANAGER (El Portero) ---
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nexus-npm # Nombre único para este server
+    restart: always
+    ports:
+      - '80:80' # Entrada HTTP
+      - '443:443' # Entrada HTTPS
+      - '81:81' # Panel Admin (Ahora sí está libre)
+    environment:
+      DISABLE_IPV6: 'true'
+    volumes:
+      - ./npm_data:/data
+      - ./npm_letsencrypt:/etc/letsencrypt
+    depends_on:
+      - front-web
+      - front-ventanilla
+    networks:
+      - nexus-net
 
 networks:
   nexus-net:
