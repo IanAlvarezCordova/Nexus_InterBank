@@ -11,7 +11,7 @@ const BANCOS_TERCEROS = [
   { id: 'ECUASOL', nombre: 'Nexus (Propio)', color: 'bg-blue-600' },
   { id: 'BANTEC', nombre: 'BanTec', color: 'bg-purple-500' },
   { id: 'ARCBANK', nombre: 'ArcBank', color: 'bg-orange-500' },
-  { id: 'ECUSOL', nombre: 'EcuSol', color: 'bg-green-500' }
+  { id: 'ECUSOL_BK', nombre: 'EcuSol', color: 'bg-green-500' }
 ];
 
 const PaginaTransferencia = () => {
