@@ -251,7 +251,7 @@ const PaginaTransferencia = () => {
         <button onClick={() => { setModo('ECUASOL'); setBanco('ECUASOL'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'ECUASOL' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
           <img src="/logo-small.png" className="w-5 h-5 opacity-80 bg-white rounded-full p-0.5" alt="" /> Cuentas Nexus
         </button>
-        <button onClick={() => { setModo('INTERBANCARIA'); setBanco('ECUSOL'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'INTERBANCARIA' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
+        <button onClick={() => { setModo('INTERBANCARIA'); setBanco('ECUSOL_BK'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'INTERBANCARIA' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
           <Users size={18} /> A Otros Bancos
         </button>
       </div>
