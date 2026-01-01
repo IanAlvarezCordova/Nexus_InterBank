@@ -140,7 +140,12 @@ const PaginaTransferencia = () => {
       if (tipoInterno === 'TERCERO' && !destinatarioData) { toast.error("Valida la cuenta primero"); return; }
       if (tipoInterno === 'PROPIA' && origen === destinoPropio) { toast.error("Cuentas iguales"); return; }
     } else {
-      // MODO INTERBANCARIO: No requerimos validación estricta de cuenta (nombre titular)
+      // MODO INTERBANCARIO: Valida selección de banco
+      if (!banco) {
+        toast.error("Seleccione un banco destino");
+        return;
+      }
+      // No requerimos validación estricta de cuenta (nombre titular)
       // porque no tenemos acceso a la base de clientes de otros bancos.
       // Solo aseguramos que se haya escrito una cuenta.
       if (!destinoManual || destinoManual.length < 5) {
@@ -251,7 +256,7 @@ const PaginaTransferencia = () => {
         <button onClick={() => { setModo('ECUASOL'); setBanco('ECUASOL'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'ECUASOL' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
           <img src="/logo-small.png" className="w-5 h-5 opacity-80 bg-white rounded-full p-0.5" alt="" /> Cuentas Nexus
         </button>
-        <button onClick={() => { setModo('INTERBANCARIA'); setBanco('ECUSOL_BK'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'INTERBANCARIA' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
+        <button onClick={() => { setModo('INTERBANCARIA'); setBanco(''); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'INTERBANCARIA' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
           <Users size={18} /> A Otros Bancos
         </button>
       </div>
@@ -264,6 +269,7 @@ const PaginaTransferencia = () => {
             onChange={(e) => { setBanco(e.target.value); setDestinoManual(''); setDestinatarioData(null); }}
             className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-ecusol-primario focus:ring-2 focus:ring-ecusol-primario outline-none font-bold text-gray-700 bg-white transition-all"
           >
+            <option value="" disabled>Seleccione el Banco Destino</option>
             {BANCOS_TERCEROS.filter(b => b.id !== 'ECUASOL').map(b => (
               <option key={b.id} value={b.id}>
                 {b.nombre}
