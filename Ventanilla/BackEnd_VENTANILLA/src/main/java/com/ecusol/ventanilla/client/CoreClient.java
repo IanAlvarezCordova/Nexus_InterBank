@@ -12,25 +12,21 @@ public class CoreClient {
     private final WebClient webClient;
 
     public CoreClient(@Value("${ecusol.core.url}") String coreUrl) {
-        // coreUrl = http://localhost:8081/api/core
         this.webClient = WebClient.builder().baseUrl(coreUrl).build();
     }
 
     public ResumenClienteDTO buscarCliente(String cedula) {
         try {
-            // Ruta relativa: /ventanilla/buscar-cliente/{cedula}
-            // URL Final: http://localhost:8081/api/core/ventanilla/buscar-cliente/...
             return webClient.get()
                     .uri("/ventanilla/buscar-cliente/" + cedula) 
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, response -> 
-                        response.bodyToMono(String.class) // Leemos el mensaje de error del Core
+                        response.bodyToMono(String.class) 
                                 .flatMap(error -> Mono.error(new RuntimeException(error)))
                     )
                     .bodyToMono(ResumenClienteDTO.class)
                     .block();
         } catch (Exception e) {
-            // Si es un error de negocio que ya capturamos, lo relanzamos tal cual
             if (e.getMessage().contains("bloqueado") || e.getMessage().contains("inactiva")) {
                  throw new RuntimeException(e.getMessage());
             }
@@ -38,7 +34,6 @@ public class CoreClient {
         }
     }
 
-    // CORRECCIÓN: Capturamos el mensaje de error (body) cuando el Core devuelve 400/500
     public String operar(TransaccionCajaRequest req) {
         return webClient.post()
                 .uri("/ventanilla/operar")
@@ -65,12 +60,11 @@ public class CoreClient {
         }
     }
 
-    // --- RUTAS ADMINISTRATIVAS CORREGIDAS ---
 
     public String cambiarEstadoCuenta(String numeroCuenta, String estado) {
         return webClient.put()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/ventanilla/cuentas/" + numeroCuenta + "/estado") // Solo /ventanilla/...
+                        .path("/ventanilla/cuentas/" + numeroCuenta + "/estado")
                         .queryParam("estado", estado)
                         .build())
                 .retrieve()
@@ -85,7 +79,7 @@ public class CoreClient {
     public String cambiarEstadoCliente(String cedula, String estado) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/ventanilla/clientes/estado") // Solo /ventanilla/...
+                        .path("/ventanilla/clientes/estado") 
                         .queryParam("cedula", cedula)
                         .queryParam("estado", estado)
                         .build())
@@ -100,7 +94,7 @@ public class CoreClient {
 
     public String eliminarCuenta(String numeroCuenta) {
         return webClient.delete()
-                .uri("/ventanilla/cuentas/" + numeroCuenta) // Solo /ventanilla/...
+                .uri("/ventanilla/cuentas/" + numeroCuenta) 
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> 
                     response.bodyToMono(String.class)
@@ -110,16 +104,14 @@ public class CoreClient {
                 .block();
     }
 
-    // --- NUEVO: OBTENER SUCURSAL POR ID ---
     public SucursalDTO obtenerSucursal(Integer id) {
         try {
              return webClient.get()
-                .uri("/sucursales/" + id) // Endpoint del CoreSucursalController
+                .uri("/sucursales/" + id) 
                 .retrieve()
                 .bodyToMono(SucursalDTO.class)
                 .block();
         } catch(Exception e) {
-            // Si falla, retornamos un objeto dummy para no romper el login
             SucursalDTO dummy = new SucursalDTO();
             dummy.setNombre("Sucursal " + id);
             return dummy;

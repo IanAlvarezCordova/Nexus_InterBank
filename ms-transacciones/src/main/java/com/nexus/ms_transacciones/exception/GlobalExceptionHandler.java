@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneral(Exception ex) {
-        ex.printStackTrace(); // Para ver el error en logs
+        ex.printStackTrace(); 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error Interno", "mensaje",
                         ex.getMessage() != null ? ex.getMessage() : "Detalles desconocidos"));

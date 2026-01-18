@@ -1,4 +1,3 @@
-//ubi: src/pages/LoginEmpleado.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ventanillaService } from '../services/ventanillaService';
@@ -43,7 +42,6 @@ const LoginEmpleado = () => {
 
   return (
     <div className="min-h-screen flex bg-gray-100 font-sans">
-      {/* Izquierda */}
       <div className="hidden lg:flex w-1/2 bg-nexus-primario items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="text-center z-10 text-white p-12">
@@ -57,7 +55,6 @@ const LoginEmpleado = () => {
         </div>
       </div>
 
-      {/* Derecha */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-2xl">
           <div className="flex flex-col items-center mb-8">

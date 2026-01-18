@@ -15,17 +15,15 @@ public class VentanillaService {
     }
 
     public String realizarOperacion(VentanillaOpDTO op) {
-        // --- CORRECCIÓN DE MAPEO (CRÍTICO) ---
-        // Convertimos del DTO del Frontend al DTO del Core
+
         TransaccionCajaRequest req = new TransaccionCajaRequest();
         
         req.setTipoOperacion(op.getTipoOperacion());
-        req.setCuentaOrigen(op.getNumeroCuentaOrigen());   // Mapeo explícito
-        req.setCuentaDestino(op.getNumeroCuentaDestino()); // Mapeo explícito
+        req.setCuentaOrigen(op.getNumeroCuentaOrigen());   
+        req.setCuentaDestino(op.getNumeroCuentaDestino()); 
         req.setMonto(op.getMonto());
         req.setDescripcion(op.getDescripcion());
 
-        // Enviamos el objeto correcto al cliente HTTP
         return coreClient.operar(req);
     }
     
@@ -33,7 +31,6 @@ public class VentanillaService {
         return coreClient.validarCuenta(numero);
     }
 
-    // --- FUNCIONES ADMINISTRATIVAS ---
 
     public void cambiarEstadoCuenta(String cuenta, String estado) {
         coreClient.cambiarEstadoCuenta(cuenta, estado);

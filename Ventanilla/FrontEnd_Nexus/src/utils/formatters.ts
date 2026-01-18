@@ -1,8 +1,4 @@
-// src/utils/formatters.ts
-/**
- * @param monto
- * @returns 
- */
+
 export const formatCurrency = (monto: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

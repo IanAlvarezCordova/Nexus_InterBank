@@ -1,4 +1,3 @@
-// src/components/common/Tarjeta.tsx
 import React from 'react';
 
 interface TarjetaProps {

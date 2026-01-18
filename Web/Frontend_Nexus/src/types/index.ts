@@ -32,7 +32,7 @@ export interface TransferenciaRequest {
   cuentaDestino: string;
   monto: number;
   descripcion: string;
-  bancoDestino?: string; // NEXUS, ECUASOL, ARBANCK, REPLICA
+  bancoDestino?: string; 
 }
 
 

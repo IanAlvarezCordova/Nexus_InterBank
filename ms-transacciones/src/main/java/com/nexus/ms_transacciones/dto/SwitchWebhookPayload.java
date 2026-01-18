@@ -6,10 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
-/**
- * DTO para RECIBIR webhooks del Switch DIGICONECU.
- * El Switch envía este payload cuando otro banco transfiere a NEXUS.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

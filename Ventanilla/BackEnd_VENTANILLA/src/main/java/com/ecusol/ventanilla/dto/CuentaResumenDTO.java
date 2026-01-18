@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/dto/CuentaResumenDTO.java
 package com.ecusol.ventanilla.dto;
 
 import lombok.Data;
@@ -11,9 +10,8 @@ public class CuentaResumenDTO {
     private BigDecimal saldo;
     private String estado;
     private Integer tipoCuentaId;
-    private String tipo; // Agregado para capturar el valor del Core
+    private String tipo; 
 
-    // Helper visual para el front
     public String getTipo() {
         if (tipo != null)
             return tipo;

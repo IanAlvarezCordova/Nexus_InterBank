@@ -4,9 +4,6 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * DTOs para el CoreVentanillaController
- */
 public class VentanillaDTO {
 
     @Data
@@ -36,7 +33,7 @@ public class VentanillaDTO {
 
     @Data
     public static class TransaccionCajaRequest {
-        private String tipoOperacion; // DEPOSITO, RETIRO, TRANSFERENCIA
+        private String tipoOperacion; 
         private String cuentaOrigen;
         private String cuentaDestino;
         private BigDecimal monto;

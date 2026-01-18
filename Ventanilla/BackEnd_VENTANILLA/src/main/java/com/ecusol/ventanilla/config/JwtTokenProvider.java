@@ -38,13 +38,11 @@ public class JwtTokenProvider {
         } catch (Exception e) { return false; }
     }
 
-    // Obtener ID del Core (Existente)
     public Long getId(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         return claims.get("id", Long.class);
     }
 
-    // NUEVO: Obtener ID del Usuario Web (El que te faltaba)
     public Integer getUsuarioWebId(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         return claims.get("usuarioWebId", Integer.class);

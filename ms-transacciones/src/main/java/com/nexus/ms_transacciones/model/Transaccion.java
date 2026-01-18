@@ -18,8 +18,6 @@ public class Transaccion {
     @Column(name = "transaccion_id")
     private Integer transaccionId;
 
-    // Negocio
-    @Column(name = "cuenta_origen")
     private String cuentaOrigen;
 
     @Column(name = "cuenta_destino")
@@ -30,22 +28,11 @@ public class Transaccion {
 
     @Column(name = "descripcion")
     private String descripcion;
-
-    @Column(name = "estado")
-    private String estado; // PENDING, COMPLETED, FAILED
-
-    @Column(name = "rol_transaccion")
-    private String rolTransaccion; // DEBITO, CREDITO
-
-    // Tipo funcional: DEPOSITO, RETIRO, TRANSFERENCIA
-    @Column(name = "tipo")
-    private String tipo;
-
-    @Column(name = "fecha_ejecucion")
+    private String estado; 
+    private String rolTransaccion; 
     private LocalDateTime fechaEjecucion;
 
-    // Switch (Técnico)
-    @Column(name = "instruction_id", unique = true)
+    @Column(unique = true)
     private String instructionId;
 
     @Column(name = "referencia")
@@ -60,7 +47,6 @@ public class Transaccion {
     @Column(name = "mensaje_error")
     private String mensajeError;
 
-    // Concurrencia
     @Version
     @Column(name = "version")
     private Long version;

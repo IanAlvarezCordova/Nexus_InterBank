@@ -31,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             if (jwtTokenProvider.validateToken(token)) {
-                // Extraemos el ID del cliente del Core para usarlo en los controladores
                 Integer clienteIdCore = Math.toIntExact(jwtTokenProvider.getId(token));
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(

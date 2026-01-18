@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/dto/TitularCuentaDTO.java
 package com.ecusol.web.dto;
 
 import lombok.AllArgsConstructor;

@@ -5,9 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Respuesta del Switch después de enviar una transferencia.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

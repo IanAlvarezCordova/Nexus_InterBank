@@ -29,14 +29,11 @@ public class TransaccionServiceImpl implements TransaccionService {
     @Transactional
     public RespuestaTransferenciaDTO realizarTransferencia(SolicitudTransferenciaDTO solicitud) {
 
-        // 1. Guardar Estado Inicial (PENDING)
         Transaccion tx = mapper.solicitudToEntity(solicitud);
         tx.setInstructionId(UUID.randomUUID().toString());
         if (tx.getReferencia() == null)
             tx.setReferencia(tx.getInstructionId());
 
-        // FIX: Usar "idBancoDestino" que es el nombre correcto en la Entidad
-        // Transaccion
         if (solicitud.getBancoDestinoId() != null) {
             tx.setIdBancoDestino(solicitud.getBancoDestinoId());
         } else {
@@ -46,23 +43,18 @@ public class TransaccionServiceImpl implements TransaccionService {
         tx = repository.save(tx);
 
         try {
-            // 2. PASO SAGA 1: Debito Local
             cuentaClient.debitar(tx.getCuentaOrigen(), tx.getMonto());
 
-            // 3. DECISIÓN: ¿Interna o Externa?
             boolean esInterna = solicitud.esTransferenciaInterna();
 
             if (esInterna) {
-                // --- TRANSFERENCIA INTERNA ---
-                // Acreditar directamente en local
                 cuentaClient.acreditar(tx.getCuentaDestino(), tx.getMonto());
                 log.info("✅ Transferencia INTERNA completada: {} -> {}",
                         tx.getCuentaOrigen(), tx.getCuentaDestino());
             } else {
-                // --- TRANSFERENCIA EXTERNA (DIGICONECU) ---
                 String bancoDestino = solicitud.getBancoDestinoCodigo() != null
                         ? solicitud.getBancoDestinoCodigo()
-                        : "BANTEC"; // Default
+                        : "BANTEC";
 
                 // CONSTRUCCION ISO 20022
                 com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO header = com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO
@@ -96,10 +88,13 @@ public class TransaccionServiceImpl implements TransaccionService {
                 com.nexus.ms_transacciones.dto.iso.IsoBodyDTO body = com.nexus.ms_transacciones.dto.iso.IsoBodyDTO
                         .builder()
                         .instructionId(tx.getInstructionId())
-                        .endToEndId("REF-" + tx.getInstructionId())
-                        .amount(amount)
-                        .debtor(debtor)
-                        .creditor(creditor)
+                        .bancoOrigen(switchClient.getBancoCodigo())
+                        .bancoDestino(bancoDestino)
+                        .cuentaOrigen(tx.getCuentaOrigen())
+                        .cuentaDestino(tx.getCuentaDestino())
+                        .monto(tx.getMonto())
+                        .moneda("USD")
+                        .concepto(tx.getDescripcion() != null ? tx.getDescripcion() : "Transferencia interbancaria")
                         .build();
 
                 com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO isoRequest = com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO
@@ -120,7 +115,6 @@ public class TransaccionServiceImpl implements TransaccionService {
                         tx.getCuentaOrigen(), bancoDestino);
             }
 
-            // Éxito
             tx.setEstado("COMPLETED");
             tx.setDescripcion("Transferencia Exitosa");
             tx.setFechaEjecucion(LocalDateTime.now());
@@ -128,10 +122,8 @@ public class TransaccionServiceImpl implements TransaccionService {
         } catch (Exception e) {
             log.error(">>> SAGA FALLO GRAVE: {}", e.getMessage(), e);
 
-            // 4. COMPENSACIÓN (Deshacer)
             if ("PENDING".equals(tx.getEstado())) {
                 try {
-                    // Solo compensamos si el dinero salió (si el error no fue SaldoInsuficiente)
                     if (!e.getMessage().contains("Fondos insuficientes")) {
                         log.info(">>> INICIANDO COMPENSACION para cuenta {}", tx.getCuentaOrigen());
                         cuentaClient.compensar(tx.getCuentaOrigen(), tx.getMonto());
@@ -150,7 +142,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     @Transactional
     public void procesarPagoEntrante(SwitchTransaccionDTO dto) {
         if (repository.existsByInstructionId(dto.getIdInstruccion())) {
-            return; // Idempotencia: Ya la procesamos
+            return;
         }
 
         Transaccion tx = mapper.switchDtoToEntity(dto);
@@ -163,7 +155,7 @@ public class TransaccionServiceImpl implements TransaccionService {
             tx.setFechaEjecucion(LocalDateTime.now());
         } catch (Exception e) {
             tx.setEstado("FAILED");
-            throw e; // Lanzamos error para que el Switch sepa que falló
+            throw e; 
         }
         repository.save(tx);
     }
@@ -177,21 +169,11 @@ public class TransaccionServiceImpl implements TransaccionService {
 
         return transacciones.stream().map(tx -> {
             MovimientoDTO dto = mapper.entityToMovimientoDto(tx);
-            // Determinar rol en función del tipo de operación y origen/destino
-            String tipo = tx.getTipo() != null ? tx.getTipo() : "TRANSFERENCIA";
-            if ("DEPOSITO".equalsIgnoreCase(tipo)) {
-                // Depósito: crédito para la cuenta origen
-                dto.setRolTransaccion("RECEPTOR");
-            } else if ("RETIRO".equalsIgnoreCase(tipo)) {
-                // Retiro: débito para la cuenta origen
+
+            if (numeroCuenta.equals(tx.getCuentaOrigen())) {
                 dto.setRolTransaccion("EMISOR");
             } else {
-                // Transferencia: depende si la cuenta es origen (débito) o destino (crédito)
-                if (numeroCuenta.equals(tx.getCuentaOrigen())) {
-                    dto.setRolTransaccion("EMISOR");
-                } else {
-                    dto.setRolTransaccion("RECEPTOR");
-                }
+                dto.setRolTransaccion("RECEPTOR"); 
             }
             return dto;
         }).toList();

@@ -45,10 +45,6 @@ public class CuentaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Cambiar estado de una cuenta (ACTIVA/INACTIVA/BLOQUEADA)
-     * Usado por Ventanilla para gestión administrativa
-     */
     @PutMapping("/{numeroCuenta}/estado")
     public ResponseEntity<String> cambiarEstado(
             @PathVariable String numeroCuenta,
@@ -57,39 +53,24 @@ public class CuentaController {
         return ResponseEntity.ok("Estado de cuenta actualizado a " + estado);
     }
 
-    /**
-     * Eliminar una cuenta (solo si saldo es 0)
-     * Usado por Ventanilla para gestión administrativa
-     */
     @DeleteMapping("/{numeroCuenta}")
     public ResponseEntity<String> eliminarCuenta(@PathVariable String numeroCuenta) {
         service.eliminarCuenta(numeroCuenta);
         return ResponseEntity.ok("Cuenta eliminada correctamente");
     }
 
-    // ========== ENDPOINTS PARA TRANSACCIONES (ms-transacciones) ==========
-
-    /**
-     * Débito de cuenta (restar saldo)
-     * Usado por ms-transacciones para transferencias salientes
-     */
     @PostMapping("/debito")
     public ResponseEntity<String> debitar(@RequestBody DebitoRequest request) {
         service.debitar(request.cuenta(), request.monto());
         return ResponseEntity.ok("Débito exitoso");
     }
 
-    /**
-     * Crédito de cuenta (sumar saldo)
-     * Usado por ms-transacciones para transferencias entrantes
-     */
     @PostMapping("/credito")
     public ResponseEntity<String> acreditar(@RequestBody DebitoRequest request) {
         service.acreditar(request.cuenta(), request.monto());
         return ResponseEntity.ok("Crédito exitoso");
     }
 
-    // DTO interno para las operaciones de débito/crédito
     public record DebitoRequest(String cuenta, java.math.BigDecimal monto) {
     }
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class MovimientoDTO {
     private Integer transaccionId;
     private String referencia;
-    private String rolTransaccion; // "DEBITO" o "CREDITO"
+    private String rolTransaccion; 
     private BigDecimal monto;
     private String descripcion;
     private LocalDateTime fechaEjecucion;

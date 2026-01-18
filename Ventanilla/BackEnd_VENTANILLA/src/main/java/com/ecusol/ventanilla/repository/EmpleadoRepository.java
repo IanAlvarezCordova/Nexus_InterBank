@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/repository/EmpleadoRepository.java
 package com.ecusol.ventanilla.repository;
 import com.ecusol.ventanilla.model.Empleado;
 import org.springframework.data.jpa.repository.JpaRepository;

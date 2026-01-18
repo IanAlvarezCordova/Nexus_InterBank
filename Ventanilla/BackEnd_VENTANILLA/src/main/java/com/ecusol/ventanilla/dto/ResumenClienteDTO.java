@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/dto/ResumenClienteDTO.java
 package com.ecusol.ventanilla.dto;
 import lombok.Data;
 import java.util.List;

@@ -1,7 +1,6 @@
 import { useAuthStore } from "@/store/useAuthStore";
 
 const BASE_URL = '/api';
-// const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const apiClient = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const { token, logout } = useAuthStore.getState();

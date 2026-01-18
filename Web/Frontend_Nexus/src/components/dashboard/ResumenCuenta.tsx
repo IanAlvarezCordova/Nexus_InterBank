@@ -1,4 +1,3 @@
-//src/components/dashboard/ResumenCuenta.tsx
 import { Tarjeta } from '@/components/common/Tarjeta';
 import { formatCurrency } from '@/utils/formatters';
 import { CuentaDTO } from '@/types';
@@ -13,9 +12,8 @@ interface ResumenCuentaProps {
 export const ResumenCuenta: React.FC<ResumenCuentaProps> = ({ cuenta }) => {
   const [visible, setVisible] = useState(true);
   const navigate = useNavigate();
-  const esAhorros = cuenta.tipoCuentaId === 1; // 1=Ahorros, 2=Corriente
+  const esAhorros = cuenta.tipoCuentaId === 1;
 
-  // Estilos dinámicos
   const estiloIcono = esAhorros ? 'bg-blue-50 text-ecusol-primario' : 'bg-gray-100 text-gray-800';
   const estiloSaldo = esAhorros ? 'text-ecusol-primario' : 'text-gray-800';
   

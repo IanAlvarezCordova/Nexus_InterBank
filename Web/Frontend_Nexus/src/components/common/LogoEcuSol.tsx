@@ -1,10 +1,9 @@
-// src/components/common/LogoEcuSol.tsx
 import React from 'react';
 import logoEcuSol from '@/assets/logo.jpg'; 
 
 interface LogoEcuSolProps {
   className?: string;
-  size?: number; // Cambiamos 'width' por 'size' para un círculo
+  size?: number; 
 }
 
 export const LogoEcuSol: React.FC<LogoEcuSolProps> = ({ className = '', size = 50 }) => {

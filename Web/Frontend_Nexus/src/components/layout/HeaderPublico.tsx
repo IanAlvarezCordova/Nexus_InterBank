@@ -37,7 +37,7 @@ export const HeaderPublico: React.FC = () => {
             onClick={() => navigate('/login')} 
             variante="secundario" 
             tamano="mediano"
-            className="bg-white text-ecusol-primario hover:bg-gray-100" // Fondo blanco, texto azul
+            className="bg-white text-ecusol-primario hover:bg-gray-100"
           >
             Iniciar Sesión
           </Boton>
@@ -45,7 +45,7 @@ export const HeaderPublico: React.FC = () => {
             onClick={() => navigate('/registro')} 
             variante="primario" 
             tamano="mediano"
-            className="bg-ecusol-secundario hover:bg-ecusol-secundario/90" // Fondo naranja
+            className="bg-ecusol-secundario hover:bg-ecusol-secundario/90" 
           >Registrarse          
           </Boton>
         </div>
@@ -80,7 +80,7 @@ export const HeaderPublico: React.FC = () => {
               onClick={() => { navigate('/registro'); setMenuAbierto(false); }} 
               variante="primario" 
               tamano="mediano"
-              className="bg-ecusol-secundario hover:bg-ecusol-secundario/90" // Botón naranja
+              className="bg-ecusol-secundario hover:bg-ecusol-secundario/90" 
             >
               Sign Up
             </Boton>

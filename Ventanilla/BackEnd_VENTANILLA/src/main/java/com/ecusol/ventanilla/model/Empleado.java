@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/model/Empleado.java
 package com.ecusol.ventanilla.model;
 
 import jakarta.persistence.*;
@@ -37,7 +36,6 @@ public class Empleado implements Serializable {
     public Empleado() {
     }
 
-    // Getters y Setters manuales (sin Lombok)
     public Integer getEmpleadoId() {
         return empleadoId;
     }

@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/client/CoreBancarioClient.java
 package com.ecusol.web.client;
 
 import com.ecusol.web.dto.*;
@@ -49,13 +48,12 @@ public class CoreBancarioClient {
     }
 
     public String realizarTransferencia(TransferenciaRequest dto, Integer bancoId) {
-        // Pass both the legacy bancoDestinoId AND the new bancoDestinoCodigo
         var payload = new SolicitudTransferenciaCore(
                 dto.cuentaOrigen(),
                 dto.cuentaDestino(),
                 dto.monto(),
                 bancoId,
-                dto.bancoDestino(), // ARCBANK, BANTEC, NEXUS, etc.
+                dto.bancoDestino(), 
                 dto.descripcion());
 
         return webClient.post()
@@ -66,13 +64,12 @@ public class CoreBancarioClient {
                 .block();
     }
 
-    // Internal DTO to match Microservice expectation
     private record SolicitudTransferenciaCore(
             String cuentaOrigen,
             String cuentaDestino,
             java.math.BigDecimal monto,
             Integer bancoDestinoId,
-            String bancoDestinoCodigo, // For DIGICONECU Switch routing
+            String bancoDestinoCodigo,
             String descripcion) {
     }
 
@@ -102,7 +99,6 @@ public class CoreBancarioClient {
         }
     }
 
-    // --- ORQUESTACIÓN VALIDACIÓN ---
     public TitularCuentaDTO validarTitular(String numeroCuenta) {
         CuentaCoreDTO cuenta = buscarCuenta(numeroCuenta);
         if (cuenta == null)

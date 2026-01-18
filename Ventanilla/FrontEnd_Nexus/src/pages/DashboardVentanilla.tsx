@@ -1,4 +1,3 @@
-//ubicacion: src/pages/DashboardVentanilla.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVentanillaStore } from '../store/useVentanillaStore';
@@ -64,7 +63,6 @@ const DashboardVentanilla = () => {
       } catch(e) { console.error(e); }
   };
 
-  // --- FUNCIONES ADMINISTRATIVAS ---
 
   const handleEstadoCliente = async (nuevoEstado: 'ACTIVO' | 'INACTIVO') => {
       if(!resumenCliente) return;
@@ -116,7 +114,6 @@ const DashboardVentanilla = () => {
       } catch(e:any) { toast.error("Error al eliminar"); } finally { setProcesando(false); }
   };
 
-  // --- OPERACIONES DE CAJA ---
 
   const validarDestinoTerceros = async () => {
       if (!destino || destino.length < 8) return;
@@ -177,7 +174,6 @@ const DashboardVentanilla = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Buscador */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex gap-4">
             <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -200,7 +196,6 @@ const DashboardVentanilla = () => {
         {resumenCliente && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
                 
-                {/* INFO CLIENTE */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className={`p-6 rounded-xl shadow-sm border transition-colors ${clienteInactivo ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
                         <div className="flex justify-between items-start mb-4">
@@ -223,7 +218,6 @@ const DashboardVentanilla = () => {
                         </div>
                     </div>
 
-                    {/* LISTA DE PRODUCTOS */}
                     <div className="space-y-3">
                         <h3 className="text-xs font-bold text-gray-400 uppercase px-1">Productos del Cliente</h3>
                         {resumenCliente.cuentas.map((cuenta) => {
@@ -249,7 +243,6 @@ const DashboardVentanilla = () => {
                     </div>
                 </div>
 
-                {/* OPERACIONES */}
                 <div className="lg:col-span-2">
                     {clienteInactivo ? (
                         <div className="h-full flex flex-col items-center justify-center bg-red-50 rounded-2xl border-2 border-dashed border-red-200 p-10 text-center text-red-400">
@@ -265,7 +258,6 @@ const DashboardVentanilla = () => {
                                     <button onClick={handleEliminarCuenta} disabled={procesando} className="text-xs font-bold px-3 py-1 rounded flex items-center gap-1 transition-colors text-red-700 hover:bg-red-100 disabled:opacity-50">
                                         <Ban size={14}/> Eliminar
                                     </button>
-                                    {/* CORREGIDO: Usamos cuentaEsActiva en lugar de accountActive */}
                                     <button onClick={cuentaEsActiva ? toggleEstadoCuenta : activarCuenta} disabled={procesando} className={`text-xs font-bold px-3 py-1 rounded flex items-center gap-1 transition-colors ${cuentaEsActiva ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}>
                                         <Power size={14}/> {cuentaEsActiva ? 'Inactivar' : 'Activar'}
                                     </button>

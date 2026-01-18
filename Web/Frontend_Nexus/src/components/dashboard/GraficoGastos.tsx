@@ -1,4 +1,3 @@
-// src/components/dashboard/GraficoGastos.tsx
 import { Tarjeta } from '@/components/common/Tarjeta';
 import { BarChart } from 'lucide-react';
 

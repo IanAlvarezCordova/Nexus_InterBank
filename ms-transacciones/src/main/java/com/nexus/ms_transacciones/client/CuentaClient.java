@@ -15,9 +15,6 @@ public class CuentaClient {
     private final RestTemplate restTemplate;
     private final String urlCompleta;
 
-    // Eliminamos @RequiredArgsConstructor para usar este constructor manual
-    // @Value inyectará la URL desde application.properties o variables de entorno
-    // de AWS
     public CuentaClient(RestTemplate restTemplate, @Value("${api.cuentas.url}") String urlBase) {
         this.restTemplate = restTemplate;
         this.urlCompleta = urlBase + "/api/v1/cuentas";

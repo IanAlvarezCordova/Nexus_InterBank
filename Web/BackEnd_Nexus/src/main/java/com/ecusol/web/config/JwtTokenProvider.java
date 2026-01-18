@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/config/JwtTokenProvider.java
 package com.ecusol.web.config;
 
 import io.jsonwebtoken.*;
@@ -17,15 +16,14 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration-ms}")
     private long validityInMilliseconds;
 
-    // MODIFICADO: Ahora recibe ambos IDs
     public String createToken(String username, Integer usuarioWebId, Integer clienteIdCore) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
                 .subject(username)
-                .claim("id", clienteIdCore)          // ID para el Core
-                .claim("usuarioWebId", usuarioWebId) // ID para la Web
+                .claim("id", clienteIdCore)          
+                .claim("usuarioWebId", usuarioWebId) 
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key)
@@ -39,13 +37,11 @@ public class JwtTokenProvider {
         } catch (Exception e) { return false; }
     }
 
-    // Obtener ID del Core (Existente)
     public Long getId(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         return claims.get("id", Long.class);
     }
 
-    // NUEVO: Obtener ID del Usuario Web (El que te faltaba)
     public Integer getUsuarioWebId(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         return claims.get("usuarioWebId", Integer.class);

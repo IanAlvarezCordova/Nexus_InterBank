@@ -29,11 +29,7 @@ public class TransaccionInterbancariaController {
     private final CuentaClient cuentaClient;
     private final SwitchClient switchClient;
 
-    /**
-     * Webhook que recibe transferencias entrantes desde el Switch DIGICONECU.
-     * Formato esperado por el Switch: ISO 20022
-     */
-    @Operation(summary = "Recibir transferencia entrante desde otro banco via Switch (ISO 20022)")
+    @Operation(summary = "Recibir transferencia entrante desde otro banco via Switch")
     @PostMapping("/webhook")
     public ResponseEntity<SwitchWebhookResponse> recibirTransferenciaEntrante(
             @RequestBody com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO payload) {
@@ -46,22 +42,17 @@ public class TransaccionInterbancariaController {
                 payload.getBody().getCreditor().getAccountId());
 
         try {
-            // 1. Verificar idempotencia (no procesar duplicados)
-            if (repository.existsByInstructionId(instructionId)) {
-                log.warn("⚠️ Transferencia duplicada ignorada: {}", instructionId);
+            if (payload.getReferencia() != null &&
+                    repository.existsByInstructionId(payload.getReferencia())) {
+                log.warn("⚠️ Transferencia duplicada ignorada: {}", payload.getReferencia());
                 return ResponseEntity.ok(new SwitchWebhookResponse(
                         "ACK",
                         "Transferencia ya procesada previamente",
                         instructionId));
             }
 
-            // 2. Acreditar la cuenta destino
-            String cuentaDestino = payload.getBody().getCreditor().getAccountId();
-            java.math.BigDecimal monto = payload.getBody().getAmount().getValue();
+            cuentaClient.acreditar(payload.getCuentaDestino(), payload.getMonto());
 
-            cuentaClient.acreditar(cuentaDestino, monto);
-
-            // 3. Registrar la transacción entrante
             Transaccion tx = new Transaccion();
             tx.setInstructionId(instructionId);
             tx.setReferencia(payload.getBody().getEndToEndId());
@@ -92,10 +83,6 @@ public class TransaccionInterbancariaController {
         }
     }
 
-    /**
-     * Obtiene la lista de bancos disponibles en el ecosistema DIGICONECU.
-     * El frontend usa esto para mostrar el combo de bancos destino.
-     */
     @Operation(summary = "Obtener lista de bancos del ecosistema DIGICONECU")
     @GetMapping("/bancos")
     public ResponseEntity<List<BancoDTO>> obtenerBancos() {
@@ -103,9 +90,6 @@ public class TransaccionInterbancariaController {
         return ResponseEntity.ok(bancos);
     }
 
-    /**
-     * Health check del servicio de transacciones.
-     */
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of(

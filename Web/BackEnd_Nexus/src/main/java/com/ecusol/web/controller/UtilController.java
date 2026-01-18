@@ -12,7 +12,6 @@ public class UtilController {
     @Autowired
     private DataSeedingService seedingService;
 
-    // Endpoint: POST http://localhost:8082/api/util/poblar-bd?cantidad=10
     @PostMapping("/poblar-bd")
     public String poblarBaseDeDatos(@RequestParam(defaultValue = "10") int cantidad) {
         if (cantidad > 100)

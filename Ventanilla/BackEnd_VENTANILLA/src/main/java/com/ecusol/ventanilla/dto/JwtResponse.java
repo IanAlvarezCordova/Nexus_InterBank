@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/dto/JwtResponse.java
 package com.ecusol.ventanilla.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;

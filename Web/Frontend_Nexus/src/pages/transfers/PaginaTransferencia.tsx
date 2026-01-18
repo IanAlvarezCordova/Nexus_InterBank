@@ -21,19 +21,16 @@ const PaginaTransferencia = () => {
   const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modos: 'ECUASOL' (antes PROPIAS) | 'INTERBANCARIA' (antes TERCEROS)
   const [modo, setModo] = useState<'ECUASOL' | 'INTERBANCARIA'>('ECUASOL');
 
-  // Nuevo: Subtipo para transferencias internas
-  // Default a TERCERO para que no salgan "mis cuentas" de una
+
   const [tipoInterno, setTipoInterno] = useState<'PROPIA' | 'TERCERO'>('TERCERO');
 
   const [banco, setBanco] = useState<string>('ECUASOL');
   const [origen, setOrigen] = useState('');
 
-  // Destinos
-  const [destinoManual, setDestinoManual] = useState(''); // Para escribir cuenta
-  const [destinoPropio, setDestinoPropio] = useState(''); // Para seleccionar de mis cuentas
+  const [destinoManual, setDestinoManual] = useState(''); 
+  const [destinoPropio, setDestinoPropio] = useState('');
 
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -81,7 +78,6 @@ const PaginaTransferencia = () => {
     setValidando(true);
     setDestinatarioData(null);
     try {
-      // Si es EcuSol, el banco es ECUASOL implicito (Nexus en UI)
       const bancoDestino = modo === 'ECUASOL' ? 'ECUASOL' : banco;
       const data = await bancaService.validarDestinatario(cuentaAValidar, bancoDestino);
       setDestinatarioData(data);
@@ -135,7 +131,6 @@ const PaginaTransferencia = () => {
     e.preventDefault();
     if (!monto || parseFloat(monto) <= 0) { toast.error("Monto inválido"); return; }
 
-    // Validaciones dependiendo del modo
     if (modo === 'ECUASOL') {
       if (tipoInterno === 'TERCERO' && !destinatarioData) { toast.error("Valida la cuenta primero"); return; }
       if (tipoInterno === 'PROPIA' && origen === destinoPropio) { toast.error("Cuentas iguales"); return; }
@@ -251,7 +246,6 @@ const PaginaTransferencia = () => {
     <div className="max-w-5xl mx-auto pb-20">
       <h1 className="text-3xl font-bold text-ecusol-primario mb-6">Zona Transaccional</h1>
 
-      {/* Tabs Principales */}
       <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 flex mb-8 max-w-lg">
         <button onClick={() => { setModo('ECUASOL'); setBanco('ECUASOL'); setDestinatarioData(null); }} className={`flex-1 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${modo === 'ECUASOL' ? 'bg-ecusol-primario text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>
           <img src="/logo-small.png" className="w-5 h-5 opacity-80 bg-white rounded-full p-0.5" alt="" /> Cuentas Nexus
@@ -287,7 +281,6 @@ const PaginaTransferencia = () => {
 
           <div className="border-t border-gray-100"></div>
 
-          {/* Sección Destino */}
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-bold text-gray-700">Cuenta de Destino</label>
@@ -309,7 +302,6 @@ const PaginaTransferencia = () => {
                 <SelectorCuenta label="" valor={destinoPropio} onChange={setDestinoPropio} opciones={cuentasDestino} />
               )
             ) : (
-              // MANUAL ENTRY (Para Nexus Terceros O Interbancaria)
               <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                 <div className="mb-3 p-3 bg-white rounded-lg flex items-center gap-2 border border-gray-300">
                   <div className={`px-3 py-1 rounded-full text-white text-xs font-bold ${modo === 'ECUASOL' ? 'bg-blue-600' : (BANCOS_TERCEROS.find(b => b.id === banco)?.color || 'bg-gray-500')}`}>
@@ -363,7 +355,6 @@ const PaginaTransferencia = () => {
           </div>
 
 
-          {/* Mostrar siempre monto salvo que sea propia y sin destino */}
           {!(modo === 'ECUASOL' && tipoInterno === 'PROPIA' && cuentasDestino.length === 0) && (
             <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 space-y-6 animate-fade-in">
               <div className="grid grid-cols-2 gap-4">

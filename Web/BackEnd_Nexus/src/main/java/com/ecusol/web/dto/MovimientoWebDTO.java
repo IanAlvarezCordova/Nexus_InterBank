@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/dto/MovimientoWebDTO.java
 package com.ecusol.web.dto;
 import java.time.LocalDateTime;
 

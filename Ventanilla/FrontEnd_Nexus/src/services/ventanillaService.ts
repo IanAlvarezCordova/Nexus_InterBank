@@ -1,10 +1,8 @@
-// src/services/ventanillaService.ts
 import { apiClient } from "./apiClient";
 import { AuthResponse, ResumenClienteDTO, VentanillaOpDTO, InfoCuentaDTO } from "../types";
 
 export const ventanillaService = {
   loginEmpleado: async (usuario: string, clave: string) => {
-    // FIX: BASE_URL ya incluye /api/ventanilla, así que usamos ruta relativa sin repetir /ventanilla
     return await apiClient<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ usuario, password: clave }),

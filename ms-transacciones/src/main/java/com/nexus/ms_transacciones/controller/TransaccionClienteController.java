@@ -29,7 +29,6 @@ public class TransaccionClienteController {
     public ResponseEntity<RespuestaTransferenciaDTO> transferir(@Valid @RequestBody SolicitudTransferenciaDTO dto) {
         RespuestaTransferenciaDTO respuesta = service.realizarTransferencia(dto);
 
-        // Si la transacción falló, devolver HTTP 422 para que el frontend lo detecte
         if ("FAILED".equals(respuesta.getEstado())) {
             return ResponseEntity.status(422).body(respuesta);
         }

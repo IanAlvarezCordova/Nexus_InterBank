@@ -7,12 +7,11 @@ import java.time.LocalDateTime;
 public class MovimientoCoreDTO {
     private Integer transaccionId;
     private String referencia;
-    private String rolTransaccion; // "EMISOR" o "RECEPTOR"
+    private String rolTransaccion; 
     private BigDecimal monto;
     private String descripcion;
-    private LocalDateTime fechaEjecucion; // Ojo: En el core se llama fechaEjecucion
+    private LocalDateTime fechaEjecucion;
 
-    // Helper para convertir a 'C' (Crédito/Verde) o 'D' (Débito/Rojo)
     public String getTipo() {
         return "RECEPTOR".equals(rolTransaccion) ? "C" : "D";
     }

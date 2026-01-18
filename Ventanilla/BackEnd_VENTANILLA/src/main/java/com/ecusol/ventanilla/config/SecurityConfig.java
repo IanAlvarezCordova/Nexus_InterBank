@@ -37,11 +37,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/util/**")
                         .permitAll()
-                        // FIX: Permitir nueva ruta de auth
                         .requestMatchers("/api/ventanilla/auth/**").permitAll()
                         .requestMatchers("/api/core/**").permitAll()
-                        // FIX CRITICO: Permitir todo para evitar bloqueo de OPTIONS/CORS (igual que Web
-                        // Backend)
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

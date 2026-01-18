@@ -7,10 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
-/**
- * DTO para ENVIAR transferencias al Switch DIGICONECU.
- * Formato esperado por POST /api/v2/transfers
- */
 @Data
 @Builder
 @NoArgsConstructor

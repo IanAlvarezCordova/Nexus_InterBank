@@ -18,7 +18,6 @@ public class AuthController {
     @PostMapping("/login/web")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest req) {
         String token = authService.login(req);
-        // CORRECCIÓN: Usamos .getUsuario() porque LoginRequest ahora es una clase @Data
         return ResponseEntity.ok(new JwtResponse(token, req.getUsuario()));
     }
 

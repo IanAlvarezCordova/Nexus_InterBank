@@ -34,7 +34,6 @@ public class CuentaService {
             throw new BusinessException("El saldo inicial no puede ser negativo");
         }
 
-        // FIX: Validar máximo 4 cuentas por cliente
         long cantidadCuentas = cuentaRepo.findByClienteId(req.getClienteId()).size();
         if (cantidadCuentas >= 4) {
             throw new BusinessException("El cliente ya tiene el máximo permitido de 4 cuentas.");
@@ -68,7 +67,6 @@ public class CuentaService {
                     try {
                         return CuentaMapper.toResponse(c);
                     } catch (Exception e) {
-                        // Log error but continue
                         System.err.println("Error mapping cuenta " + c.getId() + ": " + e.getMessage());
                         return null;
                     }
@@ -114,10 +112,6 @@ public class CuentaService {
         return sb.toString();
     }
 
-    /**
-     * Cambiar estado de una cuenta (ACTIVA/INACTIVA/BLOQUEADA)
-     * Usado por Ventanilla para gestión administrativa
-     */
     @Transactional
     public void cambiarEstado(String numeroCuenta, String nuevoEstado) {
         Cuenta cuenta = cuentaRepo.findByNumeroCuenta(numeroCuenta)
@@ -133,10 +127,6 @@ public class CuentaService {
         cuentaRepo.save(cuenta);
     }
 
-    /**
-     * Eliminar una cuenta (solo si saldo es 0)
-     * Usado por Ventanilla para gestión administrativa
-     */
     @Transactional
     public void eliminarCuenta(String numeroCuenta) {
         Cuenta cuenta = cuentaRepo.findByNumeroCuenta(numeroCuenta)

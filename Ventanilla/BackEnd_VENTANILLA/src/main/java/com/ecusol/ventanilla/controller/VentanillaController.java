@@ -30,8 +30,6 @@ public class VentanillaController {
         return ResponseEntity.ok(service.validarCuenta(numero));
     }
 
-    // --- ADMIN ---
-
     @PostMapping("/cuenta/estado")
     public ResponseEntity<String> cambiarEstadoCuenta(@RequestParam String cuenta, @RequestParam String estado) {
         service.cambiarEstadoCuenta(cuenta, estado);

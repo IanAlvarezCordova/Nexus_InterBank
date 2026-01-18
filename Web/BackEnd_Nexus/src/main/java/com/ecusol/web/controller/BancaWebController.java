@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/controller/BancaWebController.java
 package com.ecusol.web.controller;
 
 import com.ecusol.web.config.JwtTokenProvider;
@@ -60,18 +59,15 @@ public class BancaWebController {
         return ResponseEntity.ok("Cuenta creada exitosamente");
     }
 
-    // --- CORRECCIÓN ---
     @GetMapping("/validar-destinatario/{numero}")
     public DestinatarioDTO validar(@PathVariable String numero, @RequestParam(required = false) String banco) {
-        // Ahora recibimos el objeto completo del servicio
         TitularCuentaDTO titular = bankingService.validarDestinatarioCompleto(numero, banco);
 
-        // Y lo transformamos al DTO del Front con todos los datos
         return new DestinatarioDTO(
                 titular.getNumeroCuenta(),
                 titular.getNombreCompleto(),
                 titular.getIdentificacionParcial(),
-                titular.getTipoCuenta() // <--- ¡Ahora sí viaja!
+                titular.getTipoCuenta()
         );
     }
 

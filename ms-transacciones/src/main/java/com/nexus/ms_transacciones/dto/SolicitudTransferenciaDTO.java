@@ -38,17 +38,9 @@ public class SolicitudTransferenciaDTO {
     @Schema(description = "Comentario o motivo del pago", example = "Pago de arriendo - Diciembre")
     private String descripcion;
 
-    /**
-     * Determina si la transferencia es interna (mismo banco NEXUS) o externa
-     * (interbancaria).
-     */
+
     public boolean esTransferenciaInterna() {
-        // Es interna si:
-        // 1. bancoDestinoCodigo es null o vacío (asume que es local)
-        // 2. bancoDestinoCodigo es NEXUS
-        // 3. bancoDestinoId es 2 (código interno para NEXUS)
         if (bancoDestinoCodigo == null || bancoDestinoCodigo.isBlank()) {
-            // Si no viene código de banco, asumimos que es interna (o verificamos por ID)
             return bancoDestinoId == null || bancoDestinoId == 2;
         }
         return "NEXUS".equalsIgnoreCase(bancoDestinoCodigo) || "ECUASOL".equalsIgnoreCase(bancoDestinoCodigo);

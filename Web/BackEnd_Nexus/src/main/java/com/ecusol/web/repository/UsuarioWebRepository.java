@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/repository/UsuarioWebRepository.java
 package com.ecusol.web.repository;
 import com.ecusol.web.model.UsuarioWeb;
 import org.springframework.data.jpa.repository.JpaRepository;

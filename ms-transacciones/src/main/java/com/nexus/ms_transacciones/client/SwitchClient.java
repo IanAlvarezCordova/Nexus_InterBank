@@ -15,10 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Cliente para comunicarse con el Switch DIGICONECU.
- * Soporta envío de transferencias y consulta de bancos.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -35,22 +31,10 @@ public class SwitchClient {
     @Value("${banco.codigo:NEXUS}")
     private String bancoCodigo;
 
-    @Value("${api.key:NEXUS_SECRET_KEY}")
-    private String apiKey;
-
-    /**
-     * Envía una transferencia interbancaria al Switch DIGICONECU.
-     * Endpoint: POST /api/switch/v1/transferir
-     */
-    public com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO enviarTransferencia(
-            com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO request) {
-        // CORRECCIÓN URL: Según guía usuario "http://IP:8000/api/switch/v1/transferir"
-        // Aseguramos que switchUrl apunte a la base correcta o ajustamos aquí.
-        // Asumiremos que switchUrl ya trae la base (ej: http://34.44.123.236:9080)
-        // CORRECCIÓN URL: Usar /api/v1/transacciones como el postman exitoso
-        // Asumiremos que switchUrl ya trae la base (ej: http://34.44.123.236:9080 o el
-        // dominio)
-        String url = switchUrl + "/api/v1/transacciones";
+    public SwitchTransferResponse enviarTransferencia(SwitchTransferRequest request) {
+        String url = switchUrl + "/api/v2/transfers";
+        log.info("📤 Enviando transferencia al Switch: {} -> {}",
+                request.getCuentaOrigen(), request.getCuentaDestino());
 
         log.info("📤 Enviando transferencia ISO 20022 al Switch: {} -> {}",
                 request.getBody().getDebtor().getAccountId(),
@@ -79,10 +63,6 @@ public class SwitchClient {
         }
     }
 
-    /**
-     * Obtiene la lista de bancos disponibles en el ecosistema DIGICONECU.
-     * Endpoint: GET /api/v1/red/bancos (Network Management - puerto 9082)
-     */
     public List<BancoDTO> obtenerBancos() {
         String url = switchNetworkUrl + "/api/v1/red/bancos";
         log.info("📡 Consultando bancos disponibles en el Switch: {}", url);
@@ -104,9 +84,6 @@ public class SwitchClient {
         }
     }
 
-    /**
-     * Obtiene el código del banco configurado (NEXUS).
-     */
     public String getBancoCodigo() {
         return bancoCodigo;
     }

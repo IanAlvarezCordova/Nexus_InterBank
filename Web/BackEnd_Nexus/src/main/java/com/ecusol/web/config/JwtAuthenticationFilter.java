@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/config/JwtAuthenticationFilter.java
 package com.ecusol.web.config;
 
 import jakarta.servlet.FilterChain;
@@ -31,7 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             if (jwtTokenProvider.validateToken(token)) {
-                // Extraemos el ID del cliente del Core para usarlo en los controladores
                 Integer clienteIdCore = Math.toIntExact(jwtTokenProvider.getId(token));
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(

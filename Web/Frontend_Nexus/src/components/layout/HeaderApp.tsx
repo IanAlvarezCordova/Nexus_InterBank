@@ -1,7 +1,6 @@
-// src/components/layout/HeaderApp.tsx
 import React, { useState } from 'react';
 import { LogoEcuSol } from '@/components/common/LogoEcuSol';
-import { useAuthStore } from '@/store/useAuthStore'; // <--- USAR EL STORE DIRECTO
+import { useAuthStore } from '@/store/useAuthStore'; 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Boton } from '@/components/common/Boton';
 import { User, Menu, X } from 'lucide-react';
@@ -10,12 +9,12 @@ const enlaces = [
   { nombre: 'Principal', ruta: '/app/dashboard' },
   { nombre: 'Cuentas', ruta: '/app/cuentas' },
   { nombre: 'Transferir', ruta: '/app/transferir' },
-  { nombre: 'Ubícanos', ruta: '/app/ubicanos' }, // Agregado
+  { nombre: 'Ubícanos', ruta: '/app/ubicanos' }, 
   { nombre: 'Ayuda', ruta: '/app/ayuda' },
 ];
 
 export const HeaderApp: React.FC = () => {
-  const { usuario, logout } = useAuthStore(); // Usando el store
+  const { usuario, logout } = useAuthStore(); 
   const navigate = useNavigate();
   const [menuAbierto, setMenuAbierto] = useState(false);
 

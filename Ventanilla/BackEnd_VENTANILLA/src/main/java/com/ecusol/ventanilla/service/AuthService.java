@@ -21,7 +21,7 @@ public class AuthService {
     @Autowired
     private JwtTokenProvider tokenProvider;
     @Autowired
-    private CoreClient coreClient; // <--- INYECTAMOS EL CLIENTE
+    private CoreClient coreClient; 
 
     public JwtResponse login(LoginRequest req) {
         System.out.println(">>> LOGIN ATTEMPT: " + req.getUsuario());
@@ -45,12 +45,11 @@ public class AuthService {
         System.out.println(">>> LOGIN SUCCESS: Generando token");
         String token = tokenProvider.createToken(emp.getUsuario(), emp.getEmpleadoId(), emp.getRol());
 
-        // --- LÓGICA DE NOMBRE REAL ---
         String nombreSucursal = "Sucursal Desconocida";
         try {
             SucursalDTO suc = coreClient.obtenerSucursal(emp.getSucursalId());
             if (suc != null) {
-                nombreSucursal = suc.getNombre(); // Ej: "Matriz Amazonas"
+                nombreSucursal = suc.getNombre(); 
             }
         } catch (Exception e) {
             System.out.println(">>> WARN: No se pudo obtener sucursal: " + e.getMessage());

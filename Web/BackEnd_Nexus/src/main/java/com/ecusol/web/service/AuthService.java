@@ -6,7 +6,7 @@ import com.ecusol.web.dto.RegisterRequest;
 import com.ecusol.web.dto.RegistroCoreRequest;
 import com.ecusol.web.model.UsuarioWeb;
 import com.ecusol.web.repository.UsuarioWebRepository;
-import com.ecusol.web.client.CoreBancarioClient; // Importar
+import com.ecusol.web.client.CoreBancarioClient; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,10 +18,9 @@ public class AuthService {
     @Autowired private UsuarioWebRepository usuarioRepo;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private JwtTokenProvider tokenProvider;
-    @Autowired private CoreBancarioClient coreBancarioClient; // Inyectar
+    @Autowired private CoreBancarioClient coreBancarioClient; 
 
     public String login(LoginRequest req) {
-        // Nota: req.getUsuario() o req.usuario() según tu DTO. Asumimos clase Lombok.
         UsuarioWeb user = usuarioRepo.findByUsuario(req.getUsuario())
                 .orElseThrow(() -> new RuntimeException("Credenciales incorrectas"));
 
@@ -29,21 +28,16 @@ public class AuthService {
             throw new RuntimeException("Credenciales incorrectas");
         }
 
-        // 1. Validación Local (Usuario Web)
         if (!"ACTIVO".equals(user.getEstado())) {
             throw new RuntimeException("Usuario Web inactivo. Contacte al banco.");
         }
 
-        // 2. Validación Remota (Cliente Core) - BLOQUEO DE SEGURIDAD
         try {
             if (!coreBancarioClient.isClienteActivo(user.getClienteIdCore())) {
                 throw new RuntimeException("SU CLIENTE BANCARIO ESTÁ INACTIVO/BLOQUEADO. Por favor acérquese a una agencia.");
             }
         } catch (Exception e) {
-            // Si el error es nuestro mensaje de bloqueo, lo relanzamos
             if (e.getMessage().contains("INACTIVO")) throw e;
-            // Si es error de red, puedes decidir si bloquear o loguear warning.
-            // Por seguridad bancaria, si no puedo verificar estado, bloqueo.
             throw new RuntimeException("Error verificando estado bancario. Intente más tarde.");
         }
 
