@@ -51,16 +51,13 @@ public class Transaccion {
     @Column(name = "version")
     private Long version;
 
-    // 7. Constructor vacío sin Lombok
     public Transaccion() {
     }
 
-    // 8. Constructor solo para la clave primaria sin Lombok
     public Transaccion(Integer transaccionId) {
         this.transaccionId = transaccionId;
     }
 
-    // 11. equals y hashCode solo comparando la clave primaria
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -76,7 +73,6 @@ public class Transaccion {
         return Objects.hash(transaccionId);
     }
 
-    // 12. String incluyendo todas las propiedades
     @Override
     public String toString() {
         return "Transaccion{" +

@@ -152,11 +152,9 @@ public class CoreVentanillaController {
         String tipo = req.getTipoOperacion().toUpperCase();
 
         try {
-            // Ejecutar operación sobre cuentas
             switch (tipo) {
                 case "DEPOSITO":
                     cuentaClient.acreditar(req.getCuentaOrigen(), req.getMonto());
-                    // Persistir transacción
                     guardarTransaccionVentanilla(req, "DEPOSITO", null);
                     return ResponseEntity.ok("TXN-DEP-" + System.currentTimeMillis());
 

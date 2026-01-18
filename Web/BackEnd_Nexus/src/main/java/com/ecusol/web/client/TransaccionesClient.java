@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/web/client/TransaccionesClient.java
 package com.ecusol.web.client;
 
 import com.ecusol.web.dto.MovimientoTxDTO;
@@ -13,7 +12,6 @@ public class TransaccionesClient {
     private final WebClient webClient;
 
     public TransaccionesClient(@Value("${ecusol.core.url}") String coreUrl) {
-        // coreUrl expected: http://nexus-gateway:8080/api
         this.webClient = WebClient.builder().baseUrl(coreUrl).build();
     }
 

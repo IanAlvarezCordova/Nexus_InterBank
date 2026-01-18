@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/config/JwtTokenProvider.java
 package com.ecusol.ventanilla.config;
 
 import io.jsonwebtoken.*;

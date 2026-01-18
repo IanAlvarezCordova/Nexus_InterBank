@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class IsoAccountDTO {
     private String name;
     private String accountId;
-    private String accountType; // CHECKING, SAVINGS
-    private String targetBankId; // Opcional (solo para creditor)
+    private String accountType; 
+    private String targetBankId;
 }

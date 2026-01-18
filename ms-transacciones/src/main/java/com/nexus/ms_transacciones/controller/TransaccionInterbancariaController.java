@@ -63,7 +63,6 @@ public class TransaccionInterbancariaController {
             tx.setEstado("COMPLETED");
             tx.setRolTransaccion("CREDITO");
             tx.setFechaEjecucion(java.time.LocalDateTime.now());
-            // Guardar ID banco origen si es posible, o dejar null por ahora
 
             repository.save(tx);
 

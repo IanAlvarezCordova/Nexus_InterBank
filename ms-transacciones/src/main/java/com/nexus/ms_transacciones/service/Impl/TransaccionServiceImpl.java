@@ -56,7 +56,6 @@ public class TransaccionServiceImpl implements TransaccionService {
                         ? solicitud.getBancoDestinoCodigo()
                         : "BANTEC";
 
-                // CONSTRUCCION ISO 20022
                 com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO header = com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO
                         .builder()
                         .messageId("MSG-" + System.currentTimeMillis())
@@ -72,7 +71,7 @@ public class TransaccionServiceImpl implements TransaccionService {
 
                 com.nexus.ms_transacciones.dto.iso.IsoAccountDTO debtor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
                         .builder()
-                        .name("Cliente Nexus") // Idealmente obtener nombre real
+                        .name("Cliente Nexus") 
                         .accountId(tx.getCuentaOrigen())
                         .accountType("CHECKING")
                         .build();
@@ -110,7 +109,6 @@ public class TransaccionServiceImpl implements TransaccionService {
                     throw new RuntimeException("Sin respuesta del Switch");
                 }
 
-                // Si llegamos aquí es 200/201 OK porque RestTemplate lanza excepción en 4xx/5xx
                 log.info("✅ Transferencia INTERBANCARIA enviada al Switch: {} -> {}",
                         tx.getCuentaOrigen(), bancoDestino);
             }

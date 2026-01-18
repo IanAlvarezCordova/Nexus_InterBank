@@ -102,7 +102,6 @@ public class CuentaService {
     }
 
     private String generarNumeroCuenta() {
-        // Prefijo BIN: 270100 + 10 dígitos aleatorios = 16 dígitos
         String prefix = "270100";
         StringBuilder sb = new StringBuilder(prefix);
         java.util.Random random = new java.util.Random();

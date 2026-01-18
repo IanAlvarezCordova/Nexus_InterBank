@@ -17,12 +17,10 @@ public class MongoDataSeeder {
     @Bean
     CommandLineRunner start(SucursalRepository repository, MongoTemplate mongoTemplate) {
         return args -> {
-            // Verificamos si ya existen datos para no duplicar
             if (repository.count() > 0) {
                 return;
             }
 
-            // Datos reales de sucursales en Ecuador
             List<Sucursal> sucursales = Arrays.asList(
                     crearSucursal(1, 1, 1, "MATRIZ", "Matriz Quito", "Av. Amazonas y Naciones Unidas", "022567890",
                             -0.180653, -78.467834),

@@ -11,6 +11,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IsoAmountDTO {
-    private String currency; // "USD"
+    private String currency; 
     private BigDecimal value;
 }

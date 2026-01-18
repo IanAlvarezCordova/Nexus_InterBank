@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/config/JwtAuthenticationFilter.java
 package com.ecusol.ventanilla.config;
 
 import jakarta.servlet.FilterChain;

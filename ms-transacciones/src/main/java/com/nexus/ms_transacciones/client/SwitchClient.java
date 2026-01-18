@@ -41,7 +41,6 @@ public class SwitchClient {
                 request.getBody().getCreditor().getAccountId());
 
         try {
-            // Headers
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
             headers.set("apikey", apiKey);
@@ -57,8 +56,6 @@ public class SwitchClient {
             return response.getBody();
         } catch (Exception e) {
             log.error("❌ Error enviando al Switch: {}", e.getMessage());
-            // Retornamos null o lanzamos excepción según lógica negocio
-            // Para mantener compatibilidad con servicio existente:
             throw new RuntimeException("Error comunicándose con el Switch: " + e.getMessage());
         }
     }

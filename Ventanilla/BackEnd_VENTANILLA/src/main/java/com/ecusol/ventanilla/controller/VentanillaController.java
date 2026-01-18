@@ -1,4 +1,3 @@
-//ubi: src/main/java/com/ecusol/ventanilla/controller/VentanillaController.java
 package com.ecusol.ventanilla.controller;
 
 import com.ecusol.ventanilla.dto.*;

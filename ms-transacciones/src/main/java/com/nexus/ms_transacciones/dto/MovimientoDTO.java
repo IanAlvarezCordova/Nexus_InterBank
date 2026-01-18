@@ -20,6 +20,5 @@ public class MovimientoDTO {
     private LocalDateTime fechaEjecucion;
     private String cuentaOrigen;
     private String cuentaDestino;
-    // Tipo funcional: DEPOSITO, RETIRO, TRANSFERENCIA
     private String tipo;
 }

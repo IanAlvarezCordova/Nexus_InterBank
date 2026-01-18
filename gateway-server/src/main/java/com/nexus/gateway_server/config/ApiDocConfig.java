@@ -1,4 +1,4 @@
-package com.nexus.gateway_server.config; // Verifica que este sea tu paquete correcto
+package com.nexus.gateway_server.config; 
 
 import java.util.HashSet;
 import java.util.Set;
