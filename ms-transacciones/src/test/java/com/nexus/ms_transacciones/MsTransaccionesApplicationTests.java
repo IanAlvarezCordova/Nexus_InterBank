@@ -1,4 +1,4 @@
-package com.ecusol.ms_transacciones;
+package com.nexus.ms_transacciones;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

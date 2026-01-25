@@ -5,8 +5,7 @@ import java.util.List;
 
 public interface TransaccionService {
     RespuestaTransferenciaDTO realizarTransferencia(SolicitudTransferenciaDTO solicitud);
-
     void procesarPagoEntrante(SwitchTransaccionDTO dto);
-
     List<MovimientoDTO> obtenerMovimientosPorCuenta(String numeroCuenta);
+    void guardarTransaccionVentanilla(VentanillaDTO.TransaccionCajaRequest request, String usuarioId, String referencia);
 }

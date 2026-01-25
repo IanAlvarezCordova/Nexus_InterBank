@@ -47,6 +47,12 @@ public class Transaccion {
     @Column(name = "mensaje_error")
     private String mensajeError;
 
+    @Column(name = "tipo")
+    private String tipo;
+
+    @Column(name = "id_usuario")
+    private String idUsuario;
+
     @Version
     @Column(name = "version")
     private Long version;
