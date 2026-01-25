@@ -20,26 +20,23 @@ public class IsoMensajeDTO implements Serializable {
     @JsonProperty("body")
     private IsoBody body;
 
-    // --- CLASES INTERNAS ESTÁTICAS (Idénticas al Switch) ---
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class IsoHeader implements Serializable {
         @JsonProperty("messageId") private String messageId;
         @JsonProperty("creationDateTime") private String creationDateTime;
         @JsonProperty("originatingBankId") private String originatingBankId;
+        @JsonProperty("callbackUrl") private String callbackUrl;
     }
 
     @Data @Builder @NoArgsConstructor @AllArgsConstructor
     public static class IsoBody implements Serializable {
         @JsonProperty("instructionId") private String instructionId;
         @JsonProperty("endToEndId") private String endToEndId;
-        
         @JsonProperty("amount") private IsoAmount amount;
         @JsonProperty("debtor") private IsoDebtor debtor;
         @JsonProperty("creditor") private IsoCreditor creditor;
         @JsonProperty("remittanceInformation") private String remittanceInformation;
-
-        // Campos para Devolución (pacs.004)
         @JsonProperty("originalInstructionId") private String originalInstructionId;
         @JsonProperty("returnReason") private String returnReason;
     }
