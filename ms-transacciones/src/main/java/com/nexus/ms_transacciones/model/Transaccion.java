@@ -26,10 +26,10 @@ public class Transaccion {
     @Column(name = "monto")
     private BigDecimal monto;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", length = 1000)
     private String descripcion;
-    private String estado; 
-    private String rolTransaccion; 
+    private String estado;
+    private String rolTransaccion;
     private LocalDateTime fechaEjecucion;
 
     @Column(unique = true)
@@ -44,7 +44,7 @@ public class Transaccion {
     @Column(name = "id_banco_destino")
     private Integer idBancoDestino;
 
-    @Column(name = "mensaje_error")
+    @Column(name = "mensaje_error", length = 1000)
     private String mensajeError;
 
     @Column(name = "tipo")
