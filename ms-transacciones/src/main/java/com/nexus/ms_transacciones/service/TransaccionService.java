@@ -11,4 +11,7 @@ public interface TransaccionService {
     List<MovimientoDTO> obtenerMovimientosPorCuenta(String numeroCuenta);
 
     void iniciarDevolucion(java.util.UUID idInstruccion, String motivo);
+
+    void guardarTransaccionVentanilla(VentanillaDTO.TransaccionCajaRequest request, String usuarioId,
+            String referencia);
 }

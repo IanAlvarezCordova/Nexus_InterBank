@@ -1,20 +1,28 @@
 package com.nexus.ms_transacciones.controller;
 
 import com.nexus.ms_transacciones.client.CuentaClient;
+import com.nexus.ms_transacciones.client.SwitchClient;
+import com.nexus.ms_transacciones.dto.IsoMensajeDTO;
+import com.nexus.ms_transacciones.dto.VentanillaDTO;
 import com.nexus.ms_transacciones.model.Transaccion;
 import com.nexus.ms_transacciones.repository.TransaccionRepository;
-import com.nexus.ms_transacciones.dto.VentanillaDTO.*;
+import com.nexus.ms_transacciones.service.TransaccionService;
+import static com.nexus.ms_transacciones.dto.VentanillaDTO.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/core/ventanilla")
@@ -24,19 +32,28 @@ public class CoreVentanillaController {
 
     private final RestTemplate restTemplate;
     private final CuentaClient cuentaClient;
+    private final SwitchClient switchClient;
     private final TransaccionRepository transaccionRepository;
+    private final TransaccionService transaccionService;
     private final String clientesUrl;
     private final String cuentasUrl;
+
+    @Value("${banco.codigo:NEXUS}")
+    private String bancoCodigo;
 
     public CoreVentanillaController(
             RestTemplate restTemplate,
             CuentaClient cuentaClient,
+            SwitchClient switchClient,
             TransaccionRepository transaccionRepository,
+            TransaccionService transaccionService,
             @Value("${api.clientes.url}") String clientesUrl,
             @Value("${api.cuentas.url}") String cuentasUrl) {
         this.restTemplate = restTemplate;
         this.cuentaClient = cuentaClient;
+        this.switchClient = switchClient;
         this.transaccionRepository = transaccionRepository;
+        this.transaccionService = transaccionService;
         this.clientesUrl = clientesUrl;
         this.cuentasUrl = cuentasUrl;
     }
@@ -47,11 +64,9 @@ public class CoreVentanillaController {
 
         try {
             String urlCliente = clientesUrl + "/api/v1/clientes/buscar/" + cedula;
-            log.info(">>> Core Ventanilla: Llamando a MS-CLIENTES: {}", urlCliente);
             Map<String, Object> clienteData = restTemplate.getForObject(urlCliente, Map.class);
 
             if (clienteData == null) {
-                log.warn(">>> MS-CLIENTES retornó null para cédula {}", cedula);
                 return ResponseEntity.notFound().build();
             }
 
@@ -66,7 +81,6 @@ public class CoreVentanillaController {
             List<Map<String, Object>> cuentasData = new ArrayList<>();
             try {
                 String urlCuentas = cuentasUrl + "/api/v1/cuentas?clienteId=" + clienteId;
-                log.info(">>> Core Ventanilla: Llamando a MS-CUENTAS: {}", urlCuentas);
                 cuentasData = restTemplate.getForObject(urlCuentas, List.class);
             } catch (Exception exCuentas) {
                 log.error(">>> ERROR obteniendo cuentas: {}", exCuentas.getMessage());
@@ -91,32 +105,22 @@ public class CoreVentanillaController {
                     cuenta.setTipo(tipoNombre);
                     cuenta.setTipoCuentaId(tipoCuentaId);
 
-                    if ("INACTIVA".equalsIgnoreCase(cuenta.getEstado()) ||
-                            "BLOQUEADA".equalsIgnoreCase(cuenta.getEstado())) {
-                        log.warn("Cuenta {} está inactiva/bloqueada", cuenta.getNumeroCuenta());
-                    }
-
                     cuentasList.add(cuenta);
                 }
             }
             resumen.setCuentas(cuentasList);
 
-            log.info(">>> Cliente encontrado: {} con {} cuentas", nombres, cuentasList.size());
             return ResponseEntity.ok(resumen);
 
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
-            log.error(">>> Error cliente HTTP: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+        } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(null);
         } catch (Exception e) {
-            log.error("Error buscando cliente: {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
     }
 
     @GetMapping("/info-cuenta/{numeroCuenta}")
     public ResponseEntity<InfoCuentaDTO> infoCuenta(@PathVariable String numeroCuenta) {
-        log.info(">>> Core Ventanilla: Info cuenta: {}", numeroCuenta);
-
         try {
             String urlCuenta = cuentasUrl + "/api/v1/cuentas/por-numero/" + numeroCuenta;
             Map<String, Object> cuentaData = restTemplate.getForObject(urlCuenta, Map.class);
@@ -139,8 +143,42 @@ public class CoreVentanillaController {
             return ResponseEntity.ok(info);
 
         } catch (Exception e) {
-            log.error("Error obteniendo info cuenta: {}", e.getMessage());
             throw new RuntimeException("Cuenta no válida o no existe");
+        }
+    }
+
+    @PostMapping("/devoluciones")
+    public ResponseEntity<?> iniciarDevolucion(@RequestBody Map<String, String> payload) {
+        String originalTxId = payload.get("originalTxId");
+        String motivo = payload.getOrDefault("motivo", "AC04"); // Código ISO default (Closed Account)
+
+        log.info(">>> Iniciando devolución manual (pacs.004) para TX: {}", originalTxId);
+        Transaccion txLocal = transaccionRepository.findByInstructionId(originalTxId)
+                .orElseThrow(() -> new RuntimeException("Transacción original no encontrada"));
+        IsoMensajeDTO isoReturn = new IsoMensajeDTO();
+        isoReturn.setHeader(IsoMensajeDTO.IsoHeader.builder()
+                .messageId("RET-" + UUID.randomUUID())
+                .creationDateTime(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+                .originatingBankId(bancoCodigo)
+                .build());
+        isoReturn.setBody(IsoMensajeDTO.IsoBody.builder()
+                .instructionId(UUID.randomUUID().toString()) 
+                .originalInstructionId(originalTxId)         
+                .returnReason(motivo)
+                .amount(IsoMensajeDTO.IsoAmount.builder()
+                        .currency("USD")
+                        .value(txLocal.getMonto())
+                        .build())
+                .build());
+
+        try {
+            switchClient.enviarDevolucion(isoReturn);
+            txLocal.setEstado("RETURNING");
+            transaccionRepository.save(txLocal);
+            return ResponseEntity.ok(Map.of("message", "Solicitud de devolución enviada al Switch"));
+        } catch (Exception e) {
+            log.error("Error enviando devolución: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body("Error al procesar devolución: " + e.getMessage());
         }
     }
 
@@ -155,27 +193,28 @@ public class CoreVentanillaController {
             switch (tipo) {
                 case "DEPOSITO":
                     cuentaClient.acreditar(req.getCuentaOrigen(), req.getMonto());
-                    guardarTransaccionVentanilla(req, "DEPOSITO", null);
+                    transaccionService.guardarTransaccionVentanilla(req, "DEPOSITO", null);
                     return ResponseEntity.ok("TXN-DEP-" + System.currentTimeMillis());
 
                 case "RETIRO":
                     cuentaClient.debitar(req.getCuentaOrigen(), req.getMonto());
-                    guardarTransaccionVentanilla(req, "RETIRO", null);
+                    transaccionService.guardarTransaccionVentanilla(req, "RETIRO", null);
                     return ResponseEntity.ok("TXN-RET-" + System.currentTimeMillis());
 
                 case "TRANSFERENCIA":
                     if (req.getCuentaDestino() == null || req.getCuentaDestino().isEmpty()) {
                         throw new RuntimeException("Cuenta destino requerida para transferencias");
                     }
-                    String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
-                    Map<String, Object> destino = restTemplate.getForObject(urlValidar, Map.class);
-                    if (destino == null) {
+                    try {
+                        String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
+                        restTemplate.getForObject(urlValidar, Map.class);
+                    } catch (Exception e) {
                         throw new RuntimeException("Cuenta destino no existe");
                     }
 
                     cuentaClient.debitar(req.getCuentaOrigen(), req.getMonto());
                     cuentaClient.acreditar(req.getCuentaDestino(), req.getMonto());
-                    guardarTransaccionVentanilla(req, "TRANSFERENCIA", req.getCuentaDestino());
+                    transaccionService.guardarTransaccionVentanilla(req, "TRANSFERENCIA", req.getCuentaDestino());
                     return ResponseEntity.ok("TXN-TRF-" + System.currentTimeMillis());
 
                 default:
@@ -191,8 +230,6 @@ public class CoreVentanillaController {
     public ResponseEntity<String> cambiarEstadoCuenta(
             @PathVariable String numeroCuenta,
             @RequestParam String estado) {
-        log.info(">>> Core Ventanilla: Cambiar estado cuenta {} a {}", numeroCuenta, estado);
-
         String url = cuentasUrl + "/api/v1/cuentas/" + numeroCuenta + "/estado?estado=" + estado;
         restTemplate.put(url, null);
         return ResponseEntity.ok("Estado de cuenta actualizado");
@@ -202,8 +239,6 @@ public class CoreVentanillaController {
     public ResponseEntity<String> cambiarEstadoCliente(
             @RequestParam String cedula,
             @RequestParam String estado) {
-        log.info(">>> Core Ventanilla: Cambiar estado cliente {} a {}", cedula, estado);
-
         String url = clientesUrl + "/api/v1/clientes/estado?cedula=" + cedula + "&estado=" + estado;
         restTemplate.postForEntity(url, null, String.class);
         return ResponseEntity.ok("Estado de cliente actualizado");
@@ -211,17 +246,13 @@ public class CoreVentanillaController {
 
     @DeleteMapping("/cuentas/{numeroCuenta}")
     public ResponseEntity<String> eliminarCuenta(@PathVariable String numeroCuenta) {
-        log.info(">>> Core Ventanilla: Eliminar cuenta {}", numeroCuenta);
-
         String url = cuentasUrl + "/api/v1/cuentas/" + numeroCuenta;
         restTemplate.delete(url);
         return ResponseEntity.ok("Cuenta eliminada");
     }
 
-
     private String obtenerNombreTipoCuenta(Integer tipoCuentaId) {
-        if (tipoCuentaId == null)
-            return "Cuenta";
+        if (tipoCuentaId == null) return "Cuenta";
         try {
             String url = cuentasUrl + "/api/tipos-cuenta/" + tipoCuentaId;
             Map<String, Object> tipo = restTemplate.getForObject(url, Map.class);

@@ -3,7 +3,6 @@ package com.ecusol.web.controller;
 import com.ecusol.web.config.JwtTokenProvider;
 import com.ecusol.web.dto.*;
 import com.ecusol.web.service.BancaWebService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -13,10 +12,13 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class BancaWebController {
 
-    @Autowired
-    private BancaWebService bankingService;
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final BancaWebService bankingService;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public BancaWebController(BancaWebService bankingService, JwtTokenProvider jwtTokenProvider) {
+        this.bankingService = bankingService;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     private Integer getClienteIdCore(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer "))

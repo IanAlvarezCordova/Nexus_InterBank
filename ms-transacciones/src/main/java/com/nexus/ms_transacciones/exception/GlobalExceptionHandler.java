@@ -40,4 +40,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Error Interno", "mensaje",
                         ex.getMessage() != null ? ex.getMessage() : "Detalles desconocidos"));
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntime(RuntimeException ex) {
+        if (ex.getMessage().contains("Switch")) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Error de Red Bancaria", "mensaje", "El sistema interbancario no responde. Intente más tarde."));
+        }
+        return handleGeneral(ex);
+    }
 }

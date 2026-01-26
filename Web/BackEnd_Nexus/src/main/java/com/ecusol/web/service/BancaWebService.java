@@ -1,12 +1,18 @@
 package com.ecusol.web.service;
 
 import com.ecusol.web.client.CoreBancarioClient;
-import com.ecusol.web.dto.*;
+import com.ecusol.web.dto.BeneficiarioDTO;
+import com.ecusol.web.dto.CrearCuentaRequest;
+import com.ecusol.web.dto.CuentaWebDTO;
+import com.ecusol.web.dto.MovimientoCoreDTO;
+import com.ecusol.web.dto.MovimientoWebDTO;
+import com.ecusol.web.dto.SucursalDTO;
+import com.ecusol.web.dto.TitularCuentaDTO;
+import com.ecusol.web.dto.TransferenciaRequest;
 import com.ecusol.web.model.Beneficiario;
 import com.ecusol.web.model.UsuarioWeb;
 import com.ecusol.web.repository.BeneficiarioRepository;
 import com.ecusol.web.repository.UsuarioWebRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,12 +21,17 @@ import java.util.stream.Collectors;
 @Service
 public class BancaWebService {
 
-    @Autowired
-    private CoreBancarioClient coreClient;
-    @Autowired
-    private BeneficiarioRepository beneficiarioRepo;
-    @Autowired
-    private UsuarioWebRepository usuarioWebRepo;
+    private final CoreBancarioClient coreClient;
+    private final BeneficiarioRepository beneficiarioRepo;
+    private final UsuarioWebRepository usuarioWebRepo;
+
+    public BancaWebService(CoreBancarioClient coreClient, 
+                          BeneficiarioRepository beneficiarioRepo,
+                          UsuarioWebRepository usuarioWebRepo) {
+        this.coreClient = coreClient;
+        this.beneficiarioRepo = beneficiarioRepo;
+        this.usuarioWebRepo = usuarioWebRepo;
+    }
 
     public List<CuentaWebDTO> misCuentas(Integer clienteIdCore) {
         return coreClient.obtenerCuentasPorCliente(clienteIdCore).stream()
@@ -39,9 +50,10 @@ public class BancaWebService {
                 .map(m -> new MovimientoWebDTO(
                         m.getFechaEjecucion(),
                         m.getTipo(),
-                        m.getMonto(),
-                        BigDecimal.ZERO, 
-                        m.getDescripcion()))
+                        m.getMonto().doubleValue(),
+                        m.getSaldoNuevo() != null ? m.getSaldoNuevo().doubleValue() : 0.0,
+                        m.getDescripcion(),
+                        m.getOperacion()))
                 .collect(Collectors.toList());
     }
 
@@ -107,11 +119,8 @@ public class BancaWebService {
                         b.getTipoCuenta()))
                 .collect(Collectors.toList());
     }
+
+    public List<MovimientoCoreDTO> getMovimientosDebug(String numeroCuenta) {
+        return coreClient.obtenerMovimientos(numeroCuenta);
+    }
 }
-        return movsCore.stream()
-                .map(m -> new MovimientoWebDTO(
-                        m.getFechaEjecucion(),
-                        m.getTipo(),
-                        m.getMonto(),
-                        BigDecimal.ZERO, 
-                        m.getDescripcion()))

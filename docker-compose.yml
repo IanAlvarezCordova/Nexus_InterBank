@@ -18,6 +18,17 @@ services:
     ports: [ "27018:27017" ]
     networks: [ nexus-net ]
 
+  rabbitmq-server:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-server
+    ports:
+      - "5672:5672"   
+      - "15672:15672" 
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks: [ nexus-net ]
+
   nexus-gateway:
     build: ./gateway-server
     container_name: nexus-gateway
@@ -32,6 +43,26 @@ services:
     environment:
       - EUREKA_CLIENT_ENABLED=false
     networks: [ nexus-net ]
+
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nexus-npm
+    restart: always
+    ports:
+      - '8090:80'   
+      - '4443:443'  
+      - '81:81'     
+    environment:
+      DISABLE_IPV6: 'true'
+    volumes:
+      - ./npm_data:/data
+      - ./npm_letsencrypt:/etc/letsencrypt
+    depends_on:
+      - front-web
+      - front-ventanilla
+      - nexus-gateway
+    networks:
+      - nexus-net
 
   nexus-ms-cuentas:
     build: ./cbs
@@ -63,6 +94,9 @@ services:
   nexus-ms-transacciones:
     build: ./ms-transacciones
     container_name: nexus-ms-transacciones
+    depends_on:
+      - rabbitmq-server
+      - nexus-ms-cuentas
     environment:
       - DB_HOST=postgres-db-nexus
       - DB_PASSWORD=admin
@@ -74,6 +108,8 @@ services:
       - APP_SWITCH_URL=http://34.44.123.236:9080
       - APP_SWITCH_NETWORK_URL=http://34.44.123.236:9080
       - BANCO_CODIGO=NEXUS
+      - SPRING_RABBITMQ_HOST=rabbitmq-server
+      - SPRING_RABBITMQ_PORT=5672
     ports: [ "8082:8082" ]
     networks: [ nexus-net ]
 
@@ -81,18 +117,12 @@ services:
     build: ./Web/BackEnd_Nexus
     container_name: web-backend
     environment:
-      - SERVER_PORT=8082
+      - SERVER_PORT=8082 
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=nexus_web
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - ECUSOL_CORE_URL=http://nexus-gateway:8080/api
-    networks: [ nexus-net ]
-
-  front-web:
-    build: ./Web/Frontend_Nexus
-    container_name: front-web
-    ports: [ "8080:80" ]
     networks: [ nexus-net ]
 
   ventanilla-backend:
@@ -110,30 +140,17 @@ services:
       - ECUSOL_CORE_URL=http://nexus-gateway:8080/api/core
     networks: [ nexus-net ]
 
+  front-web:
+    build: ./Web/Frontend_Nexus
+    container_name: front-web
+    ports: [ "8080:80" ]
+    networks: [ nexus-net ]
+
   front-ventanilla:
     build: ./Ventanilla/FrontEnd_Nexus
     container_name: front-ventanilla
     ports: [ "8081:80" ]
     networks: [ nexus-net ]
-    # --- AGREGADO: NGINX PROXY MANAGER (El Portero) ---
-  npm:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nexus-npm # Nombre único para este server
-    restart: always
-    ports:
-      - '80:80' # Entrada HTTP
-      - '443:443' # Entrada HTTPS
-      - '81:81' # Panel Admin (Ahora sí está libre)
-    environment:
-      DISABLE_IPV6: 'true'
-    volumes:
-      - ./npm_data:/data
-      - ./npm_letsencrypt:/etc/letsencrypt
-    depends_on:
-      - front-web
-      - front-ventanilla
-    networks:
-      - nexus-net
 
 networks:
   nexus-net:

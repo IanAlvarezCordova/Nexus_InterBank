@@ -1,13 +1,18 @@
 package com.nexus.ms_transacciones.client;
 
+import com.nexus.ms_transacciones.config.RabbitMQConfig;
 import com.nexus.ms_transacciones.dto.BancoDTO;
-import com.nexus.ms_transacciones.dto.SwitchTransferRequest;
-import com.nexus.ms_transacciones.dto.SwitchTransferResponse;
+import com.nexus.ms_transacciones.dto.IsoMensajeDTO;
+import com.nexus.ms_transacciones.dto.SwitchWebhookResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +25,11 @@ import java.util.List;
 @Slf4j
 public class SwitchClient {
 
+    private final RabbitTemplate rabbitTemplate;
     private final RestTemplate restTemplate;
+
+    @Value("${banco.webhook.url}")
+    private String webhookUrl;
 
     @Value("${api.switch.url}")
     private String switchUrl;
@@ -31,56 +40,65 @@ public class SwitchClient {
     @Value("${banco.codigo:NEXUS}")
     private String bancoCodigo;
 
-    @Value("${api.key:NEXUS_SECRET_KEY_123}")
+    @Value("${api.switch.apikey}")
     private String apiKey;
 
-    public SwitchTransferResponse enviarTransferencia(SwitchTransferRequest request) {
-        String url = switchUrl + "/api/v2/transfers";
-        log.info("📤 Enviando transferencia al Switch: {} -> {}",
-                request.getCuentaOrigen(), request.getCuentaDestino());
-
-        log.info("📤 Enviando transferencia ISO 20022 al Switch: {} -> {}",
-                request.getBody().getDebtor().getAccountId(),
-                request.getBody().getCreditor().getAccountId());
+    public SwitchWebhookResponse enviarTransferencia(IsoMensajeDTO request) {
+        String url = switchUrl + "/api/v1/transacciones";
+        log.info("Enviando ISO 20022 SÍNCRONO al Switch: {}", url);
 
         try {
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("apikey", apiKey);
 
-            org.springframework.http.HttpEntity<com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO> entity = new org.springframework.http.HttpEntity<>(
-                    request, headers);
+            HttpEntity<IsoMensajeDTO> entity = new HttpEntity<>(request, headers);
+            ResponseEntity<SwitchWebhookResponse> response = restTemplate.postForEntity(
+                    url, entity, SwitchWebhookResponse.class);
 
-            ResponseEntity<com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO> response = restTemplate.postForEntity(url,
-                    entity,
-                    com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO.class);
-
-            log.info("✅ Respuesta del Switch: {}", response.getStatusCode());
             return response.getBody();
         } catch (Exception e) {
-            log.error("❌ Error enviando al Switch: {}", e.getMessage());
-            throw new RuntimeException("Error comunicándose con el Switch: " + e.getMessage());
+            log.error("Error contactando al Switch: {}", e.getMessage());
+            throw new RuntimeException("Switch no disponible: " + e.getMessage());
         }
     }
 
-    public List<BancoDTO> obtenerBancos() {
-        String url = switchNetworkUrl + "/api/v1/red/bancos";
-        log.info("📡 Consultando bancos disponibles en el Switch: {}", url);
+    public void enviarTransferenciaAsincrona(IsoMensajeDTO request) {
+        if (request.getHeader() != null) {
+            request.getHeader().setCallbackUrl(this.webhookUrl);
+        }
 
+        log.info("Enviando mensaje ASÍNCRONO a RabbitMQ: ID {}", request.getBody().getInstructionId());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_SWITCH, "switch.in", request);
+    }
+
+    public List<BancoDTO> obtenerBancos() {
+        String url = switchNetworkUrl + "/api/v1/instituciones";
         try {
             ResponseEntity<List<BancoDTO>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<BancoDTO>>() {
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<List<BancoDTO>>() {
                     });
-
-            List<BancoDTO> bancos = response.getBody();
-            log.info("✅ Bancos obtenidos: {}", bancos != null ? bancos.size() : 0);
-            return bancos != null ? bancos : Collections.emptyList();
+            return response.getBody() != null ? response.getBody() : Collections.emptyList();
         } catch (Exception e) {
-            log.error("❌ Error obteniendo bancos: {}", e.getMessage());
+            log.warn("No se pudieron obtener bancos: {}", e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    public void enviarDevolucion(IsoMensajeDTO request) {
+        String url = switchUrl + "/api/v1/transacciones/devoluciones";
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", apiKey);
+
+            HttpEntity<IsoMensajeDTO> entity = new HttpEntity<>(request, headers);
+            restTemplate.postForEntity(url, entity, Void.class);
+
+            log.info("Devolución enviada al Switch correctamente");
+        } catch (Exception e) {
+            log.error("Error enviando devolución: {}", e.getMessage());
+            throw new RuntimeException("Fallo al enviar devolución: " + e.getMessage());
         }
     }
 

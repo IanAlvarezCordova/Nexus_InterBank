@@ -1,4 +1,4 @@
-package com.nexus.ms_transacciones.service.Impl;
+package com.nexus.ms_transacciones.service;
 
 import com.nexus.ms_transacciones.client.CuentaClient;
 import com.nexus.ms_transacciones.client.SwitchClient;
@@ -6,7 +6,7 @@ import com.nexus.ms_transacciones.dto.*;
 import com.nexus.ms_transacciones.mapper.TransaccionMapper;
 import com.nexus.ms_transacciones.model.Transaccion;
 import com.nexus.ms_transacciones.repository.TransaccionRepository;
-import com.nexus.ms_transacciones.service.TransaccionService;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,73 +43,69 @@ public class TransaccionServiceImpl implements TransaccionService {
         tx = repository.save(tx);
 
         try {
+            // 1. Débito Local
             cuentaClient.debitar(tx.getCuentaOrigen(), tx.getMonto());
 
             boolean esInterna = solicitud.esTransferenciaInterna();
 
             if (esInterna) {
+                // Transferencia Interna (Mismo Banco)
                 cuentaClient.acreditar(tx.getCuentaDestino(), tx.getMonto());
-                log.info("✅ Transferencia INTERNA completada: {} -> {}",
+                log.info(" Transferencia INTERNA completada: {} -> {}",
                         tx.getCuentaOrigen(), tx.getCuentaDestino());
             } else {
+                // 2. Transferencia Interbancaria (ISO 20022 via Switch)
                 String bancoDestino = solicitud.getBancoDestinoCodigo() != null
                         ? solicitud.getBancoDestinoCodigo()
-                        : "BANTEC";
+                        : "BANTEC"; // Default si no viene
 
-                com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO header = com.nexus.ms_transacciones.dto.iso.IsoHeaderDTO
-                        .builder()
+                // Construcción del DTO Unificado (IsoMensajeDTO)
+                IsoMensajeDTO isoRequest = new IsoMensajeDTO();
+
+                // HEADER
+                isoRequest.setHeader(IsoMensajeDTO.IsoHeader.builder()
                         .messageId("MSG-" + System.currentTimeMillis())
-                        .creationDateTime(java.time.Instant.now().toString())
+                        .creationDateTime(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
                         .originatingBankId(switchClient.getBancoCodigo())
-                        .build();
+                        .build());
 
-                com.nexus.ms_transacciones.dto.iso.IsoAmountDTO amount = com.nexus.ms_transacciones.dto.iso.IsoAmountDTO
-                        .builder()
-                        .currency("USD")
-                        .value(tx.getMonto())
-                        .build();
-
-                com.nexus.ms_transacciones.dto.iso.IsoAccountDTO debtor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
-                        .builder()
-                        .name("Cliente Nexus")
-                        .accountId(tx.getCuentaOrigen())
-                        .accountType("CHECKING")
-                        .build();
-
-                com.nexus.ms_transacciones.dto.iso.IsoAccountDTO creditor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
-                        .builder()
-                        .name("Cliente Externo")
-                        .accountId(tx.getCuentaDestino())
-                        .accountType("SAVINGS")
-                        .targetBankId(bancoDestino)
-                        .build();
-
-                com.nexus.ms_transacciones.dto.iso.IsoBodyDTO body = com.nexus.ms_transacciones.dto.iso.IsoBodyDTO
-                        .builder()
+                // BODY
+                isoRequest.setBody(IsoMensajeDTO.IsoBody.builder()
                         .instructionId(tx.getInstructionId())
-                        .bancoOrigen(switchClient.getBancoCodigo())
-                        .bancoDestino(bancoDestino)
-                        .cuentaOrigen(tx.getCuentaOrigen())
-                        .cuentaDestino(tx.getCuentaDestino())
-                        .monto(tx.getMonto())
-                        .moneda("USD")
-                        .concepto(tx.getDescripcion() != null ? tx.getDescripcion() : "Transferencia interbancaria")
-                        .build();
+                        .endToEndId(tx.getReferencia())
+                        .remittanceInformation(tx.getDescripcion() != null ? tx.getDescripcion() : "Transferencia SPI")
 
-                com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO isoRequest = com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO
-                        .builder()
-                        .header(header)
-                        .body(body)
-                        .build();
+                        // Amount
+                        .amount(IsoMensajeDTO.IsoAmount.builder()
+                                .currency("USD")
+                                .value(tx.getMonto())
+                                .build())
 
-                com.nexus.ms_transacciones.dto.iso.IsoMensajeDTO response = switchClient
-                        .enviarTransferencia(isoRequest);
+                        // Debtor (Ordenante)
+                        .debtor(IsoMensajeDTO.IsoDebtor.builder()
+                                .name("Cliente Nexus")
+                                .accountId(tx.getCuentaOrigen())
+                                .accountType("CHECKING")
+                                .build())
 
-                if (response == null) {
-                    throw new RuntimeException("Sin respuesta del Switch");
+                        // Creditor (Beneficiario)
+                        .creditor(IsoMensajeDTO.IsoCreditor.builder()
+                                .name("Cliente Externo")
+                                .accountId(tx.getCuentaDestino())
+                                .accountType("SAVINGS")
+                                .targetBankId(bancoDestino) // CRÍTICO para el enrutamiento del Switch
+                                .build())
+                        .build());
+
+                // 3. Envío al Switch
+                SwitchWebhookResponse response = switchClient.enviarTransferencia(isoRequest);
+
+                if (response == null || "NACK".equals(response.getStatus())) {
+                    throw new RuntimeException("Switch rechazó la operación: "
+                            + (response != null ? response.getMessage() : "Null Response"));
                 }
 
-                log.info("✅ Transferencia INTERBANCARIA enviada al Switch: {} -> {}",
+                log.info(" Transferencia INTERBANCARIA enviada al Switch: {} -> {}",
                         tx.getCuentaOrigen(), bancoDestino);
             }
 
@@ -120,6 +116,7 @@ public class TransaccionServiceImpl implements TransaccionService {
         } catch (Exception e) {
             log.error(">>> SAGA FALLO GRAVE: {}", e.getMessage(), e);
 
+            // Rollback manual (Compensación)
             if ("PENDING".equals(tx.getEstado())) {
                 try {
                     if (!e.getMessage().contains("Fondos insuficientes")) {
@@ -226,5 +223,24 @@ public class TransaccionServiceImpl implements TransaccionService {
         txOriginal.setEstado("RETURN_REQUESTED"); // O "REFUNDED"
         txOriginal.setDescripcion("Devolución iniciada: " + motivo);
         repository.save(txOriginal);
+    }
+
+    @Transactional
+    public void guardarTransaccionVentanilla(VentanillaDTO.TransaccionCajaRequest request, String usuarioId,
+            String referencia) {
+        Transaccion tx = new Transaccion();
+        tx.setInstructionId(UUID.randomUUID().toString());
+        tx.setReferencia(referencia != null ? referencia : tx.getInstructionId());
+        tx.setCuentaOrigen(request.getCuentaOrigen());
+        tx.setCuentaDestino(request.getCuentaDestino());
+        tx.setMonto(request.getMonto());
+        tx.setDescripcion(request.getDescripcion());
+        tx.setEstado("COMPLETED");
+        tx.setRolTransaccion(request.getTipoOperacion());
+        tx.setFechaEjecucion(LocalDateTime.now());
+        tx.setIdUsuario(usuarioId);
+
+        repository.save(tx);
+        log.info("Transacción ventanilla guardada: {}", tx.getInstructionId());
     }
 }
