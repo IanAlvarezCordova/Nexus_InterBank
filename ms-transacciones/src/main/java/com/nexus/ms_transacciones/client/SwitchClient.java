@@ -44,7 +44,7 @@ public class SwitchClient {
     private String apiKey;
 
     public SwitchWebhookResponse enviarTransferencia(IsoMensajeDTO request) {
-        String url = switchUrl + "/api/v1/transacciones";
+        String url = switchUrl + "/api/v2/switch/transfers";
         log.info("Enviando ISO 20022 SÍNCRONO al Switch: {}", url);
 
         try {

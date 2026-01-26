@@ -8,7 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SwitchWebhookResponse {
-    private String status; 
+    @com.fasterxml.jackson.annotation.JsonAlias("estado")
+    private String status;
+
     private String message;
+
+    @com.fasterxml.jackson.annotation.JsonAlias("idInstruccion")
     private String instructionId;
 }
