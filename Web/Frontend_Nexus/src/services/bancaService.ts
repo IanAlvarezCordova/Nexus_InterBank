@@ -68,7 +68,7 @@ export const bancaService = {
   },
 
   devolverTransaccion: async (id: string, motivo: string) => {
-    return await apiClient<void>(`/transacciones/${id}/devolucion`, {
+    return await apiClient<void>(`/v1/transacciones/${id}/devolucion`, {
       method: 'POST',
       body: JSON.stringify({ motivo })
     });

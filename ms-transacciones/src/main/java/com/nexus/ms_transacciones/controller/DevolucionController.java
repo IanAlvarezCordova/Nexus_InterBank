@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/transacciones")
+@RequestMapping("/api/v1/transacciones")
 @RequiredArgsConstructor
 public class DevolucionController {
 
