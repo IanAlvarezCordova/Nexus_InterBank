@@ -105,9 +105,9 @@ services:
       - URL_MS_CLIENTES=http://nexus-ms-clientes:8084
       - EUREKA_CLIENT_ENABLED=false
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=public
-      - APP_SWITCH_URL=http://34.44.123.236:9080
-      - APP_SWITCH_NETWORK_URL=http://34.44.123.236:9080
-      - BANCO_CODIGO=NEXUS
+      - APP_SWITCH_URL=http://34.16.106.7:8000
+      - APP_SWITCH_NETWORK_URL=http://34.16.106.7:8000
+      - BANCO_CODIGO=NEXUS_BK
       - SPRING_RABBITMQ_HOST=rabbitmq-server
       - SPRING_RABBITMQ_PORT=5672
     ports: [ "8082:8082" ]
