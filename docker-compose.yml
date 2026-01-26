@@ -22,8 +22,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq-server
     ports:
-      - "5672:5672"   
-      - "15672:15672" 
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -49,9 +49,9 @@ services:
     container_name: nexus-npm
     restart: always
     ports:
-      - '8090:80'   
-      - '4443:443'  
-      - '81:81'     
+      - '80:80'
+      - '4443:443'
+      - '81:81'
     environment:
       DISABLE_IPV6: 'true'
     volumes:
@@ -117,7 +117,7 @@ services:
     build: ./Web/BackEnd_Nexus
     container_name: web-backend
     environment:
-      - SERVER_PORT=8082 
+      - SERVER_PORT=8082
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db-nexus:5432/postgres?currentSchema=nexus_web
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
