@@ -42,7 +42,7 @@ public class TransaccionInterbancariaController {
 
         String instructionId = payload.getBody().getInstructionId();
         String originatingBank = payload.getHeader().getOriginatingBankId();
-        
+
         String cuentaDestino = null;
         if (payload.getBody().getCreditor() != null) {
             cuentaDestino = payload.getBody().getCreditor().getAccountId();
@@ -54,7 +54,7 @@ public class TransaccionInterbancariaController {
                 instructionId, originatingBank, cuentaDestino);
 
         if (cuentaDestino == null) {
-             return ResponseEntity.badRequest()
+            return ResponseEntity.badRequest()
                     .body(new SwitchWebhookResponse("NACK", "Cuenta destino no informada", instructionId));
         }
 
@@ -74,19 +74,19 @@ public class TransaccionInterbancariaController {
             Transaccion tx = new Transaccion();
             tx.setInstructionId(instructionId);
             tx.setReferencia(endToEndId);
-            
+
             String cuentaOrigen = "EXTERNA";
             if (payload.getBody().getDebtor() != null && payload.getBody().getDebtor().getAccountId() != null) {
                 cuentaOrigen = payload.getBody().getDebtor().getAccountId();
             }
             tx.setCuentaOrigen(cuentaOrigen);
-            
+
             tx.setCuentaDestino(cuentaDestino);
             tx.setMonto(monto);
-            tx.setDescripcion("Transferencia recibida de " + originatingBank + " - " + 
-                              payload.getBody().getRemittanceInformation());
+            tx.setDescripcion("Transferencia recibida de " + originatingBank + " - " +
+                    payload.getBody().getRemittanceInformation());
             tx.setEstado("COMPLETED");
-            tx.setRolTransaccion("CREDITO"); 
+            tx.setRolTransaccion("CREDITO");
             tx.setFechaEjecucion(LocalDateTime.now());
 
             repository.save(tx);
@@ -104,6 +104,50 @@ public class TransaccionInterbancariaController {
                     "NACK",
                     "Error de negocio: " + e.getMessage(),
                     instructionId));
+        }
+    }
+
+    @Operation(summary = "Recibir confirmación de devolucion (Return) desde Switch")
+    @PostMapping({ "/webhook/api/incoming/return", "/api/incoming/return" }) // Catch-all for weird path concatenation
+    public ResponseEntity<SwitchWebhookResponse> recibirDevolucionEntrante(@RequestBody IsoMensajeDTO payload) {
+        log.info(">>>> WEBHOOK DEVOLUCION RECIBIDO: {}", payload);
+
+        try {
+            // Logic to process the return credit (reverse of debit)
+            // Extract IDs
+            String instructionId = payload.getBody().getInstructionId();
+            String originalInstructionId = payload.getBody().getOriginalInstructionId(); // Assuming field exists or we
+                                                                                         // parse logic
+            // Note: IsoBody in our DTO might not have originalInstructionId directly if
+            // it's the same class as transfer.
+            // Check ReturnRequestDTO vs IsoMensajeDTO.
+            // If the switch sends a pacs.004 wrapped in the same structure:
+
+            String targetAccount = payload.getBody().getCreditor().getAccountId();
+            java.math.BigDecimal amount = payload.getBody().getAmount().getValue();
+
+            // Creditar la cuenta (reverso)
+            log.info("Procesando reverso/devolución para cuenta: {}", targetAccount);
+            cuentaClient.acreditar(targetAccount, amount);
+
+            // Guardar o actualizar transacción
+            Transaccion tx = new Transaccion();
+            tx.setInstructionId(instructionId);
+            tx.setReferencia(
+                    originalInstructionId != null ? originalInstructionId : "REF-RET-" + System.currentTimeMillis());
+            tx.setCuentaDestino(targetAccount);
+            tx.setMonto(amount);
+            tx.setTipo("C"); // Credito
+            tx.setDescripcion("Devolución Recibida: " + payload.getBody().getRemittanceInformation());
+            tx.setEstado("COMPLETED");
+            tx.setFechaEjecucion(LocalDateTime.now());
+            repository.save(tx);
+
+            return ResponseEntity.ok(new SwitchWebhookResponse("ACK", "Devolución procesada", instructionId));
+
+        } catch (Exception e) {
+            log.error("Error procesando devolución: {}", e.getMessage());
+            return ResponseEntity.ok(new SwitchWebhookResponse("NACK", "Error: " + e.getMessage(), "unknown"));
         }
     }
 
