@@ -61,6 +61,8 @@ public class IsoMensajeDTO implements Serializable {
         private String originalInstructionId;
         @JsonProperty("returnReason")
         private String returnReason;
+        @JsonProperty("returnAmount")
+        private IsoAmount returnAmount;
     }
 
     @Data

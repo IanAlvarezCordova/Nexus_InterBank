@@ -108,45 +108,70 @@ public class TransaccionInterbancariaController {
     }
 
     @Operation(summary = "Recibir confirmación de devolucion (Return) desde Switch")
-    @PostMapping({ "/webhook/api/incoming/return", "/api/incoming/return" }) // Catch-all for weird path concatenation
+    @PostMapping({ "/webhook/api/incoming/return", "/api/incoming/return" })
     public ResponseEntity<SwitchWebhookResponse> recibirDevolucionEntrante(@RequestBody IsoMensajeDTO payload) {
         log.info(">>>> WEBHOOK DEVOLUCION RECIBIDO: {}", payload);
 
         try {
             // Logic to process the return credit (reverse of debit)
-            // Extract IDs
-            String instructionId = payload.getBody().getInstructionId();
-            String originalInstructionId = payload.getBody().getOriginalInstructionId(); // Assuming field exists or we
-                                                                                         // parse logic
-            // Note: IsoBody in our DTO might not have originalInstructionId directly if
-            // it's the same class as transfer.
-            // Check ReturnRequestDTO vs IsoMensajeDTO.
-            // If the switch sends a pacs.004 wrapped in the same structure:
+            String instructionId = payload.getBody().getInstructionId() != null
+                    ? payload.getBody().getInstructionId()
+                    : "RET-" + System.currentTimeMillis();
 
-            String targetAccount = payload.getBody().getCreditor().getAccountId();
-            java.math.BigDecimal amount = payload.getBody().getAmount().getValue();
+            String originalInstructionId = payload.getBody().getOriginalInstructionId();
+            if (originalInstructionId == null) {
+                log.error("OriginalInstructionId es nulo en el webhook de retorno");
+                return ResponseEntity
+                        .ok(new SwitchWebhookResponse("NACK", "OriginalInstructionId Missing", instructionId));
+            }
 
-            // Creditar la cuenta (reverso)
-            log.info("Procesando reverso/devolución para cuenta: {}", targetAccount);
+            log.info("Procesando devolución para OriginalInstructionId: {}", originalInstructionId);
+
+            // Buscar la transacción original para saber a quién devolver
+            Transaccion txOriginal = repository.findByInstructionId(originalInstructionId)
+                    .orElseThrow(
+                            () -> new RuntimeException("Transacción original no encontrada: " + originalInstructionId));
+
+            // La cuenta a acreditar es la cuenta ORIGEN de la transacción original (la que
+            // pagó)
+            String targetAccount = txOriginal.getCuentaOrigen();
+
+            // Monto a devolver
+            java.math.BigDecimal amount = null;
+            if (payload.getBody().getReturnAmount() != null) {
+                amount = payload.getBody().getReturnAmount().getValue();
+            } else if (payload.getBody().getAmount() != null) {
+                amount = payload.getBody().getAmount().getValue();
+            } else {
+                amount = txOriginal.getMonto(); // Fallback to original amount
+            }
+
+            log.info("Acreditando devolución {} a cuenta {}", amount, targetAccount);
             cuentaClient.acreditar(targetAccount, amount);
 
-            // Guardar o actualizar transacción
-            Transaccion tx = new Transaccion();
-            tx.setInstructionId(instructionId);
-            tx.setReferencia(
-                    originalInstructionId != null ? originalInstructionId : "REF-RET-" + System.currentTimeMillis());
-            tx.setCuentaDestino(targetAccount);
-            tx.setMonto(amount);
-            tx.setTipo("C"); // Credito
-            tx.setDescripcion("Devolución Recibida: " + payload.getBody().getRemittanceInformation());
-            tx.setEstado("COMPLETED");
-            tx.setFechaEjecucion(LocalDateTime.now());
-            repository.save(tx);
+            // Actualizar transacción original
+            txOriginal.setEstado("REFUNDED");
+            repository.save(txOriginal);
+
+            // Guardar registro de la devolución
+            Transaccion txDevolucion = new Transaccion();
+            txDevolucion.setInstructionId(instructionId);
+            txDevolucion.setReferencia(originalInstructionId);
+            txDevolucion.setCuentaDestino(targetAccount);
+            txDevolucion.setCuentaOrigen("SWITCH-RETURN");
+            txDevolucion.setMonto(amount);
+            txDevolucion.setTipo("C"); // Credito
+            txDevolucion.setDescripcion(
+                    "Devolución: " + (payload.getBody().getReturnReason() != null ? payload.getBody().getReturnReason()
+                            : "Solicitada"));
+            txDevolucion.setEstado("COMPLETED");
+            txDevolucion.setFechaEjecucion(LocalDateTime.now());
+            repository.save(txDevolucion);
 
             return ResponseEntity.ok(new SwitchWebhookResponse("ACK", "Devolución procesada", instructionId));
 
         } catch (Exception e) {
-            log.error("Error procesando devolución: {}", e.getMessage());
+            log.error("Error procesando devolución: {}", e.getMessage(), e);
             return ResponseEntity.ok(new SwitchWebhookResponse("NACK", "Error: " + e.getMessage(), "unknown"));
         }
     }
