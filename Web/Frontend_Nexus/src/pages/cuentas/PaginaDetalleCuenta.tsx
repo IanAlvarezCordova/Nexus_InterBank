@@ -164,7 +164,6 @@ const PaginaDetalleCuenta = () => {
             : tipoTexto;
 
         const puedeDevolver = !!mov.instructionId;
-        console.log('Mov:', mov.descripcion, 'ID:', mov.instructionId, 'Puede:', puedeDevolver);
 
         return (
             <div className="flex justify-between items-center p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group">
@@ -178,7 +177,7 @@ const PaginaDetalleCuenta = () => {
                             <span>{fechaFormat}</span>
                             <span>{horaFormat}</span>
                             <span className="text-gray-400">•</span>
-                            <span className="text-gray-600">{mov.descripcion} {mov.instructionId ? '' : '(No ID)'}</span>
+                            <span className="text-gray-600">{mov.descripcion}</span>
                         </div>
                     </div>
                 </div>

@@ -25,9 +25,9 @@ public class BancaWebService {
     private final BeneficiarioRepository beneficiarioRepo;
     private final UsuarioWebRepository usuarioWebRepo;
 
-    public BancaWebService(CoreBancarioClient coreClient, 
-                          BeneficiarioRepository beneficiarioRepo,
-                          UsuarioWebRepository usuarioWebRepo) {
+    public BancaWebService(CoreBancarioClient coreClient,
+            BeneficiarioRepository beneficiarioRepo,
+            UsuarioWebRepository usuarioWebRepo) {
         this.coreClient = coreClient;
         this.beneficiarioRepo = beneficiarioRepo;
         this.usuarioWebRepo = usuarioWebRepo;
@@ -53,7 +53,8 @@ public class BancaWebService {
                         m.getMonto().doubleValue(),
                         m.getSaldoNuevo() != null ? m.getSaldoNuevo().doubleValue() : 0.0,
                         m.getDescripcion(),
-                        m.getOperacion()))
+                        m.getOperacion(),
+                        m.getInstructionId()))
                 .collect(Collectors.toList());
     }
 
@@ -83,7 +84,7 @@ public class BancaWebService {
         CrearCuentaRequest req = CrearCuentaRequest.builder()
                 .clienteId(clienteIdCore)
                 .tipoCuentaId(tipoCuentaId)
-                .sucursalIdApertura(1) 
+                .sucursalIdApertura(1)
                 .saldoInicial(BigDecimal.ZERO)
                 .build();
         coreClient.crearCuenta(req);
