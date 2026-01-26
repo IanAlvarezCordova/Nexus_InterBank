@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bancaService } from '@/services/bancaService';
 import { MovimientoDTO, CuentaDTO } from '@/types';
@@ -195,7 +195,7 @@ const PaginaDetalleCuenta = () => {
                     {puedeDevolver && (
                         <button
                             onClick={() => handleOpenReturn(mov)}
-                            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
                             title="Devolver Transacción"
                         >
                             <RotateCcw size={18} />
