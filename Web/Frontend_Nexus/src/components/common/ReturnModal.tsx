@@ -58,15 +58,15 @@ export const ReturnModal = ({ isOpen, onClose, onConfirm, isLoading }: ReturnMod
                 </div>
 
                 <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                    <Boton variante="terciario" onClick={onClose} disabled={isLoading}>
+                    <Boton variante="secundario" onClick={onClose} disabled={isLoading}>
                         Cancelar
                     </Boton>
                     <Boton
                         variante="primario"
                         onClick={() => onConfirm(selectedReason)}
-                        cargando={isLoading}
+                        disabled={isLoading}
                     >
-                        Confirmar Devolución
+                        {isLoading ? 'Procesando...' : 'Confirmar Devolución'}
                     </Boton>
                 </div>
             </div>
