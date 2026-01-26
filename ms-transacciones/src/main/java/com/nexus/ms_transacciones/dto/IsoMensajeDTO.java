@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IsoMensajeDTO implements Serializable {
 
     @JsonProperty("header")
@@ -42,6 +43,7 @@ public class IsoMensajeDTO implements Serializable {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IsoBody implements Serializable {
         @JsonProperty("instructionId")
         private String instructionId;
@@ -65,6 +67,7 @@ public class IsoMensajeDTO implements Serializable {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IsoAmount implements Serializable {
         @JsonProperty("currency")
         private String currency;
@@ -76,6 +79,7 @@ public class IsoMensajeDTO implements Serializable {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IsoDebtor implements Serializable {
         @JsonProperty("name")
         private String name;
@@ -89,6 +93,7 @@ public class IsoMensajeDTO implements Serializable {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IsoCreditor implements Serializable {
         @JsonProperty("name")
         private String name;
