@@ -25,6 +25,9 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final SwitchClient switchClient;
     private final TransaccionMapper mapper;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     @Override
     @Transactional
     public RespuestaTransferenciaDTO realizarTransferencia(SolicitudTransferenciaDTO solicitud) {
@@ -230,15 +233,30 @@ public class TransaccionServiceImpl implements TransaccionService {
         switchClient.enviarDevolucion(returnRequest);
 
         // Actualizar estado local
-        // RE-FETCH para evitar OptimisticLockingFailure si el webhook llegó antes
-        Transaccion txUpd = repository.getReferenceById(txOriginal.getTransaccionId());
+        try {
+            // Force refresh from DB to discard stale session state
+            Transaccion txToUpdate = repository.findById(txOriginal.getTransaccionId())
+                    .orElseThrow(() -> new RuntimeException("Tx desapareció"));
 
-        if ("REFUNDED".equals(txUpd.getEstado())) {
-            log.info("La devolución ya fue procesada por el webhook. No se requiere actualizar estado.");
-        } else {
-            txUpd.setEstado("RETURN_REQUESTED");
-            txUpd.setDescripcion("Devolución iniciada: " + motivo);
-            repository.save(txUpd);
+            // Assuming 'entityManager' is injected, e.g., via @PersistenceContext
+            // @PersistenceContext
+            // private EntityManager entityManager;
+            // If not already present, you would need to add it to the class.
+            entityManager.refresh(txToUpdate); // This forces the SELECT to get the latest Version from DB
+
+            if ("REFUNDED".equals(txToUpdate.getEstado())) {
+                log.info("La devolución ya fue procesada por el webhook. No se actualiza estado.");
+            } else {
+                txToUpdate.setEstado("RETURN_REQUESTED");
+                txToUpdate.setDescripcion("Devolución iniciada: " + motivo);
+                repository.saveAndFlush(txToUpdate);
+            }
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException
+                | org.hibernate.StaleObjectStateException e) {
+            log.warn(
+                    "Race condition detectada y manejada: El webhook actualizó la transacción antes que nosotros. Todo OK.");
+        } catch (Exception e) {
+            log.error("Error al actualizar estado local post-devolución", e);
         }
     }
 
