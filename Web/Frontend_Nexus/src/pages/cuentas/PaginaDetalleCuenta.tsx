@@ -163,13 +163,13 @@ const PaginaDetalleCuenta = () => {
                     : 'Transferencia'
             : tipoTexto;
 
-        // Solo permitir devolución en transferencias recibidas (Crédito) que tengan ID de instrucción
         const puedeDevolver = !!mov.instructionId;
+        console.log('Mov:', mov.descripcion, 'ID:', mov.instructionId, 'Puede:', puedeDevolver);
 
         return (
             <div className="flex justify-between items-center p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group">
                 <div className="flex items-center gap-3">
-                    <div className={`p - 2 rounded - full ${esCredito ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} `}>
+                    <div className={`p-2 rounded-full ${esCredito ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} `}>
                         <SignoIcon size={18} />
                     </div>
                     <div>
@@ -178,13 +178,13 @@ const PaginaDetalleCuenta = () => {
                             <span>{fechaFormat}</span>
                             <span>{horaFormat}</span>
                             <span className="text-gray-400">•</span>
-                            <span className="text-gray-600">{mov.descripcion}</span>
+                            <span className="text-gray-600">{mov.descripcion} {mov.instructionId ? '' : '(No ID)'}</span>
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="text-right">
-                        <p className={`font - bold ${colorMonto} `}>
+                        <p className={`font-bold ${colorMonto} `}>
                             {esCredito ? '+' : '-'}{formatCurrency(mov.monto)}
                         </p>
                         <p className="text-xs text-gray-400">
@@ -192,15 +192,16 @@ const PaginaDetalleCuenta = () => {
                         </p>
                     </div>
 
-                    {puedeDevolver && (
-                        <button
-                            onClick={() => handleOpenReturn(mov)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                            title="Devolver Transacción"
-                        >
-                            <RotateCcw size={18} />
-                        </button>
-                    )}
+
+                    <button
+                        disabled={!puedeDevolver}
+                        onClick={() => handleOpenReturn(mov)}
+                        className={`p-2 rounded-full transition-all ${puedeDevolver ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' : 'text-gray-200 cursor-not-allowed'}`}
+                        title={puedeDevolver ? "Devolver Transacción" : "No retornable (Sin ID)"}
+                    >
+                        <RotateCcw size={18} />
+                    </button>
+
                 </div>
             </div>
         );
