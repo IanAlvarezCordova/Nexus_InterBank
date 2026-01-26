@@ -170,6 +170,11 @@ public class TransaccionServiceImpl implements TransaccionService {
         return transacciones.stream().map(tx -> {
             MovimientoDTO dto = mapper.entityToMovimientoDto(tx);
 
+            // Manual mapping patch and debug
+            dto.setInstructionId(tx.getInstructionId());
+            // log.info("Tx: {}, InstID Entity: {}, InstID DTO: {}", tx.getTransaccionId(),
+            // tx.getInstructionId(), dto.getInstructionId());
+
             if (numeroCuenta.equals(tx.getCuentaOrigen())) {
                 dto.setRolTransaccion("EMISOR");
             } else {
