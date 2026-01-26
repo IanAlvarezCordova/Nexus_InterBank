@@ -31,6 +31,9 @@ public class SwitchClient {
     @Value("${banco.codigo:NEXUS}")
     private String bancoCodigo;
 
+    @Value("${api.key:NEXUS_SECRET_KEY_123}")
+    private String apiKey;
+
     public SwitchTransferResponse enviarTransferencia(SwitchTransferRequest request) {
         String url = switchUrl + "/api/v2/transfers";
         log.info("📤 Enviando transferencia al Switch: {} -> {}",
@@ -83,5 +86,25 @@ public class SwitchClient {
 
     public String getBancoCodigo() {
         return bancoCodigo;
+    }
+
+    public void enviarDevolucion(com.nexus.ms_transacciones.dto.ReturnRequestDTO request) {
+        String url = switchUrl + "/api/v2/switch/transfers/return";
+        log.info("📤 Enviando Solicitud Devolución (pacs.004) al Switch: {}", request.getHeader().getMessageId());
+
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("apikey", apiKey);
+
+            org.springframework.http.HttpEntity<com.nexus.ms_transacciones.dto.ReturnRequestDTO> entity = new org.springframework.http.HttpEntity<>(
+                    request, headers);
+
+            restTemplate.postForEntity(url, entity, String.class);
+            log.info("✅ Devolución aceptada por el Switch");
+        } catch (Exception e) {
+            log.error("❌ Error enviando devolución al Switch: {}", e.getMessage());
+            throw new RuntimeException("Error comunicándose con el Switch para Devolución: " + e.getMessage());
+        }
     }
 }

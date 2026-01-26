@@ -18,6 +18,7 @@ export interface MovimientoDTO {
   saldoNuevo: number;
   descripcion: string;
   operacion?: string; // DEPOSITO | RETIRO | TRANSFERENCIA
+  instructionId?: string;
 }
 
 export interface DestinatarioDTO {

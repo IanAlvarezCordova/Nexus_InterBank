@@ -24,6 +24,7 @@ public interface TransaccionMapper {
     @Mapping(target = "mensaje", source = "descripcion")
     SwitchTransaccionDTO entityToSwitchDto(Transaccion tx);
 
+    @Mapping(target = "instructionId", source = "instructionId")
     MovimientoDTO entityToMovimientoDto(Transaccion tx);
 
     List<MovimientoDTO> entityListToMovimientoDtoList(List<Transaccion> txs);
@@ -34,7 +35,6 @@ public interface TransaccionMapper {
     @Mapping(target = "estado", source = "estadoActual")
     @Mapping(target = "descripcion", source = "mensaje")
     @Mapping(target = "rolTransaccion", constant = "CREDITO")
-    @Mapping(target = "tipo", constant = "TRANSFERENCIA")
     @Mapping(target = "version", ignore = true)
     Transaccion switchDtoToEntity(SwitchTransaccionDTO dto);
 

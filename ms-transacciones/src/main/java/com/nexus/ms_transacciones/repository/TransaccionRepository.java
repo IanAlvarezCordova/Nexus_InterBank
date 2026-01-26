@@ -11,4 +11,6 @@ public interface TransaccionRepository extends JpaRepository<Transaccion, Intege
 
     List<Transaccion> findAllByCuentaOrigenOrCuentaDestinoOrderByFechaEjecucionDesc(String cuentaOrigen,
             String cuentaDestino);
+
+    java.util.Optional<Transaccion> findByInstructionId(String instructionId);
 }

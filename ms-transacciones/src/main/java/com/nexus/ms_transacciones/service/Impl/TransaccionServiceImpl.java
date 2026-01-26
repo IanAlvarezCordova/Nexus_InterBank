@@ -71,7 +71,7 @@ public class TransaccionServiceImpl implements TransaccionService {
 
                 com.nexus.ms_transacciones.dto.iso.IsoAccountDTO debtor = com.nexus.ms_transacciones.dto.iso.IsoAccountDTO
                         .builder()
-                        .name("Cliente Nexus") 
+                        .name("Cliente Nexus")
                         .accountId(tx.getCuentaOrigen())
                         .accountType("CHECKING")
                         .build();
@@ -153,7 +153,7 @@ public class TransaccionServiceImpl implements TransaccionService {
             tx.setFechaEjecucion(LocalDateTime.now());
         } catch (Exception e) {
             tx.setEstado("FAILED");
-            throw e; 
+            throw e;
         }
         repository.save(tx);
     }
@@ -171,9 +171,60 @@ public class TransaccionServiceImpl implements TransaccionService {
             if (numeroCuenta.equals(tx.getCuentaOrigen())) {
                 dto.setRolTransaccion("EMISOR");
             } else {
-                dto.setRolTransaccion("RECEPTOR"); 
+                dto.setRolTransaccion("RECEPTOR");
             }
             return dto;
         }).toList();
+    }
+
+    @Override
+    @Transactional
+    public void iniciarDevolucion(UUID idInstruccion, String motivo) {
+        log.info("🔄 Iniciando DEVOLUCIÓN MANUAL para transacción {}", idInstruccion);
+
+        Transaccion txOriginal = repository.findByInstructionId(idInstruccion.toString())
+                .orElseThrow(() -> new RuntimeException("Transacción no encontrada"));
+
+        // Validar que sea una transacción recibida y completada
+        if (!"COMPLETED".equals(txOriginal.getEstado())) {
+            throw new RuntimeException("Solo se pueden devolver transacciones COMPLETADAS");
+        }
+
+        // Construir pacs.004
+        com.nexus.ms_transacciones.dto.ReturnRequestDTO returnRequest = new com.nexus.ms_transacciones.dto.ReturnRequestDTO();
+
+        com.nexus.ms_transacciones.dto.ReturnRequestDTO.Header header = new com.nexus.ms_transacciones.dto.ReturnRequestDTO.Header();
+        header.setMessageId("MSG-RET-" + UUID.randomUUID().toString().substring(0, 8));
+        header.setCreationDateTime(LocalDateTime.now().toString());
+        // OriginatingBankId debe ser MI banco (porque yo estoy devolviendo)
+        // Pero en Transacciones "Received", el origenEra "OTRO" y destino "YO".
+        // Al devolver, YO soy el originating de la devolución.
+        header.setOriginatingBankId(switchClient.getBancoCodigo());
+        returnRequest.setHeader(header);
+
+        com.nexus.ms_transacciones.dto.ReturnRequestDTO.Body body = new com.nexus.ms_transacciones.dto.ReturnRequestDTO.Body();
+        // originalInstructionId es el ID de la transacción original
+        // PERO OJO: En la entidad Transaccion, ¿instructionId es el que vino del
+        // switch?
+        // En procesarPagoEntrante: tx.setInstructionId(dto.getIdInstruccion()); -> Sí.
+        body.setOriginalInstructionId(txOriginal.getInstructionId());
+        body.setReturnReason(motivo);
+
+        com.nexus.ms_transacciones.dto.ReturnRequestDTO.ReturnAmount amount = new com.nexus.ms_transacciones.dto.ReturnRequestDTO.ReturnAmount();
+        // Asumimos moneda USD siempre o la sacamos de la TX si tuviera campo moneda (no
+        // lo vi en entity simple, asumo USD)
+        amount.setCurrency("USD");
+        amount.setValue(txOriginal.getMonto());
+        body.setReturnAmount(amount);
+
+        returnRequest.setBody(body);
+
+        // Enviar
+        switchClient.enviarDevolucion(returnRequest);
+
+        // Actualizar estado local
+        txOriginal.setEstado("RETURN_REQUESTED"); // O "REFUNDED"
+        txOriginal.setDescripcion("Devolución iniciada: " + motivo);
+        repository.save(txOriginal);
     }
 }

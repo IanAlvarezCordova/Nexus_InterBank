@@ -31,7 +31,7 @@ export const bancaService = {
   },
 
   validarDestinatario: async (numeroCuenta: string, banco?: string) => {
-    const url = banco 
+    const url = banco
       ? `/web/validar-destinatario/${numeroCuenta}?banco=${banco}`
       : `/web/validar-destinatario/${numeroCuenta}`;
     return await apiClient<DestinatarioDTO>(url);
@@ -50,20 +50,27 @@ export const bancaService = {
     });
   },
 
-  
+
   getBeneficiarios: async () => {
     return await apiClient<Beneficiario[]>('/web/beneficiarios');
   },
 
   guardarBeneficiario: async (data: Beneficiario) => {
     return await apiClient<string>('/web/beneficiarios', {
-        method: 'POST',
-        body: JSON.stringify(data)
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   },
 
   getSucursales: async () => {
-    
-    return await apiClient<Sucursal[]>('/web/sucursales'); 
+
+    return await apiClient<Sucursal[]>('/web/sucursales');
+  },
+
+  devolverTransaccion: async (id: string, motivo: string) => {
+    return await apiClient<void>(`/transacciones/${id}/devolucion`, {
+      method: 'POST',
+      body: JSON.stringify({ motivo })
+    });
   }
 };

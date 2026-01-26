@@ -9,4 +9,6 @@ public interface TransaccionService {
     void procesarPagoEntrante(SwitchTransaccionDTO dto);
 
     List<MovimientoDTO> obtenerMovimientosPorCuenta(String numeroCuenta);
+
+    void iniciarDevolucion(java.util.UUID idInstruccion, String motivo);
 }
