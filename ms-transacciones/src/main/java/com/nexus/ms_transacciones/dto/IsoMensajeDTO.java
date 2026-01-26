@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,45 +22,81 @@ public class IsoMensajeDTO implements Serializable {
     @JsonProperty("body")
     private IsoBody body;
 
-
-    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IsoHeader implements Serializable {
-        @JsonProperty("messageId") private String messageId;
-        @JsonProperty("creationDateTime") private String creationDateTime;
-        @JsonProperty("originatingBankId") private String originatingBankId;
-        @JsonProperty("callbackUrl") private String callbackUrl;
+        @JsonProperty("messageId")
+        private String messageId;
+        @JsonProperty("creationDateTime")
+        private String creationDateTime;
+        @JsonProperty("originatingBankId")
+        private String originatingBankId;
+        @JsonProperty("callbackUrl")
+        private String callbackUrl;
     }
 
-    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class IsoBody implements Serializable {
-        @JsonProperty("instructionId") private String instructionId;
-        @JsonProperty("endToEndId") private String endToEndId;
-        @JsonProperty("amount") private IsoAmount amount;
-        @JsonProperty("debtor") private IsoDebtor debtor;
-        @JsonProperty("creditor") private IsoCreditor creditor;
-        @JsonProperty("remittanceInformation") private String remittanceInformation;
-        @JsonProperty("originalInstructionId") private String originalInstructionId;
-        @JsonProperty("returnReason") private String returnReason;
+        @JsonProperty("instructionId")
+        private String instructionId;
+        @JsonProperty("endToEndId")
+        private String endToEndId;
+        @JsonProperty("amount")
+        private IsoAmount amount;
+        @JsonProperty("debtor")
+        private IsoDebtor debtor;
+        @JsonProperty("creditor")
+        private IsoCreditor creditor;
+        @JsonProperty("remittanceInformation")
+        private String remittanceInformation;
+        @JsonProperty("originalInstructionId")
+        private String originalInstructionId;
+        @JsonProperty("returnReason")
+        private String returnReason;
     }
 
-    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class IsoAmount implements Serializable {
-        @JsonProperty("currency") private String currency;
-        @JsonProperty("value") private BigDecimal value;
+        @JsonProperty("currency")
+        private String currency;
+        @JsonProperty("value")
+        private BigDecimal value;
     }
 
-    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class IsoDebtor implements Serializable {
-        @JsonProperty("name") private String name;
-        @JsonProperty("accountId") private String accountId;
-        @JsonProperty("accountType") private String accountType;
+        @JsonProperty("name")
+        private String name;
+        @JsonProperty("accountId")
+        private String accountId;
+        @JsonProperty("accountType")
+        private String accountType;
     }
 
-    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class IsoCreditor implements Serializable {
-        @JsonProperty("name") private String name;
-        @JsonProperty("accountId") private String accountId;
-        @JsonProperty("accountType") private String accountType;
-        @JsonProperty("targetBankId") private String targetBankId;
+        @JsonProperty("name")
+        private String name;
+        @JsonProperty("accountId")
+        private String accountId;
+        @JsonProperty("accountType")
+        private String accountType;
+        @JsonProperty("targetBankId")
+        private String targetBankId;
     }
 }
