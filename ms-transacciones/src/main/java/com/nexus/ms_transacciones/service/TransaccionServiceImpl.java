@@ -230,9 +230,16 @@ public class TransaccionServiceImpl implements TransaccionService {
         switchClient.enviarDevolucion(returnRequest);
 
         // Actualizar estado local
-        txOriginal.setEstado("RETURN_REQUESTED"); // O "REFUNDED"
-        txOriginal.setDescripcion("Devolución iniciada: " + motivo);
-        repository.save(txOriginal);
+        // RE-FETCH para evitar OptimisticLockingFailure si el webhook llegó antes
+        Transaccion txUpd = repository.getReferenceById(txOriginal.getTransaccionId());
+
+        if ("REFUNDED".equals(txUpd.getEstado())) {
+            log.info("La devolución ya fue procesada por el webhook. No se requiere actualizar estado.");
+        } else {
+            txUpd.setEstado("RETURN_REQUESTED");
+            txUpd.setDescripcion("Devolución iniciada: " + motivo);
+            repository.save(txUpd);
+        }
     }
 
     @Transactional
