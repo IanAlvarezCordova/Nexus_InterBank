@@ -16,13 +16,18 @@ public class DevolucionController {
     private final TransaccionService transaccionService;
 
     @PostMapping("/{id}/devolucion")
-    public ResponseEntity<Void> iniciarDevolucion(@PathVariable UUID id, @RequestBody Map<String, String> body) {
-        String motivo = body.get("motivo");
-        if (motivo == null || motivo.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<?> iniciarDevolucion(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        try {
+            String motivo = body.get("motivo");
+            if (motivo == null || motivo.isBlank()) {
+                return ResponseEntity.badRequest().body("Motivo es requerido");
+            }
 
-        transaccionService.iniciarDevolucion(id, motivo);
-        return ResponseEntity.ok().build();
+            transaccionService.iniciarDevolucion(id, motivo);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log stack trace
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 }
