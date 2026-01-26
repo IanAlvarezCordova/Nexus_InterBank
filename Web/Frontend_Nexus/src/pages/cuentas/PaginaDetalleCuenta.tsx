@@ -164,7 +164,7 @@ const PaginaDetalleCuenta = () => {
             : tipoTexto;
 
         // Solo permitir devolución en transferencias recibidas (Crédito) que tengan ID de instrucción
-        const puedeDevolver = esCredito && mov.instructionId;
+        const puedeDevolver = !!mov.instructionId;
 
         return (
             <div className="flex justify-between items-center p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors group">
