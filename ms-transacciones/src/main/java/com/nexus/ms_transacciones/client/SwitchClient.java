@@ -130,4 +130,34 @@ public class SwitchClient {
             throw new RuntimeException("Error comunicándose con el Switch para Devolución: " + e.getMessage());
         }
     }
+
+    public com.nexus.ms_transacciones.dto.AccountLookupResponse validarCuenta(
+            com.nexus.ms_transacciones.dto.AccountLookupRequest request) {
+        String url = switchUrl + "/api/v2/switch/accounts/lookup";
+        log.info("🔍 Validando cuenta en Switch: {}", url);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", apiKey);
+
+            HttpEntity<com.nexus.ms_transacciones.dto.AccountLookupRequest> entity = new HttpEntity<>(request, headers);
+            ResponseEntity<com.nexus.ms_transacciones.dto.AccountLookupResponse> response = restTemplate.postForEntity(
+                    url, entity, com.nexus.ms_transacciones.dto.AccountLookupResponse.class);
+
+            return response.getBody();
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("❌ Error validando cuenta: {}", e.getResponseBodyAsString());
+            return com.nexus.ms_transacciones.dto.AccountLookupResponse.builder()
+                    .status("FAILED")
+                    .data(com.nexus.ms_transacciones.dto.AccountLookupResponse.AccountData.builder()
+                            .exists(false)
+                            .mensaje("Error validando cuenta: " + e.getResponseBodyAsString())
+                            .build())
+                    .build();
+        } catch (Exception e) {
+            log.error("❌ Error contactando al Switch para validación: {}", e.getMessage());
+            throw new RuntimeException("Switch no disponible para validación: " + e.getMessage());
+        }
+    }
 }

@@ -30,7 +30,34 @@ export const bancaService = {
     return await apiClient<MovimientoDTO[]>(`/web/movimientos/${numeroCuenta}`);
   },
 
-  validarDestinatario: async (numeroCuenta: string, banco?: string) => {
+  validarDestinatario: async (numeroCuenta: string, banco?: string): Promise<DestinatarioDTO> => {
+    // Si es banco externo (no es ECUASOL/Propio), usar el nuevo endpoint de switch
+    if (banco && banco !== 'ECUASOL') {
+      const response = await apiClient<any>('/v1/transacciones/validar-cuenta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          header: { originatingBankId: 'NEXUS_BK' },
+          body: {
+            targetBankId: banco,
+            targetAccountNumber: numeroCuenta
+          }
+        })
+      });
+
+      if (response.status === 'SUCCESS' && response.data?.exists) {
+        return {
+          nombreTitular: response.data.ownerName,
+          numeroCuenta: numeroCuenta,
+          tipoCuenta: 'Interbancaria',
+          cedulaParcial: '***' // No viene del switch, placeholder
+        };
+      } else {
+        throw new Error(response.data?.mensaje || 'Cuenta no encontrada en banco destino');
+      }
+    }
+
+    // Lógica existente para cuentas internas
     const url = banco
       ? `/web/validar-destinatario/${numeroCuenta}?banco=${banco}`
       : `/web/validar-destinatario/${numeroCuenta}`;

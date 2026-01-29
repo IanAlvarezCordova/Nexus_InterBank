@@ -14,4 +14,6 @@ public interface TransaccionService {
 
     void guardarTransaccionVentanilla(VentanillaDTO.TransaccionCajaRequest request, String usuarioId,
             String referencia);
+
+    AccountLookupResponse validarCuenta(AccountLookupRequest request);
 }

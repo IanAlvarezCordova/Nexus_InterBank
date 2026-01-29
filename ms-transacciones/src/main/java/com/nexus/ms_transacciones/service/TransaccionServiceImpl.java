@@ -283,4 +283,16 @@ public class TransaccionServiceImpl implements TransaccionService {
         repository.save(tx);
         log.info("Transacción ventanilla guardada: {}", tx.getInstructionId());
     }
+
+    @Override
+    public AccountLookupResponse validarCuenta(AccountLookupRequest request) {
+        // Asignar ID del banco origen si no viene
+        if (request.getHeader() == null) {
+            request.setHeader(AccountLookupRequest.Header.builder().build());
+        }
+        if (request.getHeader().getOriginatingBankId() == null) {
+            request.getHeader().setOriginatingBankId(switchClient.getBancoCodigo());
+        }
+        return switchClient.validarCuenta(request);
+    }
 }

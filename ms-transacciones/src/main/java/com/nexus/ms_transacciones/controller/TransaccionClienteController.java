@@ -40,4 +40,11 @@ public class TransaccionClienteController {
     public ResponseEntity<List<MovimientoDTO>> obtenerMovimientos(@PathVariable String numeroCuenta) {
         return ResponseEntity.ok(service.obtenerMovimientosPorCuenta(numeroCuenta));
     }
+
+    @PostMapping("/validar-cuenta")
+    @Operation(summary = "Validar cuenta en otro banco (Account Lookup)")
+    public ResponseEntity<com.nexus.ms_transacciones.dto.AccountLookupResponse> validarCuenta(
+            @RequestBody com.nexus.ms_transacciones.dto.AccountLookupRequest request) {
+        return ResponseEntity.ok(service.validarCuenta(request));
+    }
 }
