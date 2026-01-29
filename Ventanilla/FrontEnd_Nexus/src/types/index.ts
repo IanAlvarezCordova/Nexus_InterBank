@@ -6,28 +6,29 @@ export interface AuthResponse {
 
 export interface CuentaResumenDTO {
   numeroCuenta: string;
-  tipo: string; 
+  tipo: string;
   saldo: number;
   estado: string;
 }
 
 export interface ResumenClienteDTO {
   clienteId: number;
-  nombres: string; 
+  nombres: string;
   cedula: string;
   estado: string;
   cuentas: CuentaResumenDTO[];
 }
 
 export interface InfoCuentaDTO {
-    numeroCuenta: string;
-    nombreCompleto: string; 
-    tipoCuenta: string;
+  numeroCuenta: string;
+  nombreCompleto: string;
+  tipoCuenta: string;
 }
 
 export interface VentanillaOpDTO {
   numeroCuentaOrigen: string;
-  numeroCuentaDestino?: string; 
+  numeroCuentaDestino?: string;
+  bancoDestino?: string;
   monto: number;
   descripcion: string;
 }

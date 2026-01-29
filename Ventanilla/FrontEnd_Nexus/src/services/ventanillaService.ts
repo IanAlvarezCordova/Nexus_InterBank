@@ -17,6 +17,10 @@ export const ventanillaService = {
     return await apiClient<InfoCuentaDTO>(`/cuentas/validar/${cuenta}`);
   },
 
+  obtenerMovimientos: async (cuenta: string) => {
+    return await apiClient<any[]>(`/movimientos/${cuenta}`);
+  },
+
   operar: async (tipo: 'DEPOSITO' | 'RETIRO' | 'TRANSFERENCIA', datos: VentanillaOpDTO) => {
     return await apiClient<string>(`/operaciones`, {
       method: 'POST',
@@ -55,6 +59,13 @@ export const ventanillaService = {
   eliminarCuenta: async (numeroCuenta: string) => {
     return await apiClient<string>(`/cuenta/${numeroCuenta}`, {
       method: 'DELETE'
+    });
+  },
+
+  iniciarDevolucion: async (txId: string, motivo: string) => {
+    return await apiClient<any>(`/devoluciones`, {
+      method: 'POST',
+      body: JSON.stringify({ originalTxId: txId, motivo })
     });
   }
 };

@@ -11,7 +11,8 @@ import java.util.List;
 
 public class VentanillaDTO {
 
-    private VentanillaDTO() {}
+    private VentanillaDTO() {
+    }
 
     @Data
     @Builder
@@ -53,10 +54,11 @@ public class VentanillaDTO {
     @AllArgsConstructor
     public static class TransaccionCajaRequest implements Serializable {
 
-        private String tipoOperacion;      
-        private BigDecimal monto;        
-        private String cuentaOrigen;        
-        private String cuentaDestino;         
+        private String tipoOperacion;
+        private BigDecimal monto;
+        private String cuentaOrigen;
+        private String cuentaDestino;
+        private String bancoDestino;
         private String descripcion;
     }
 }

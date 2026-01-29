@@ -4,6 +4,7 @@ import com.nexus.ms_transacciones.client.CuentaClient;
 import com.nexus.ms_transacciones.client.SwitchClient;
 import com.nexus.ms_transacciones.dto.IsoMensajeDTO;
 import com.nexus.ms_transacciones.dto.VentanillaDTO;
+import com.nexus.ms_transacciones.dto.SolicitudTransferenciaDTO;
 import com.nexus.ms_transacciones.model.Transaccion;
 import com.nexus.ms_transacciones.repository.TransaccionRepository;
 import com.nexus.ms_transacciones.service.TransaccionService;
@@ -147,35 +148,37 @@ public class CoreVentanillaController {
         }
     }
 
+    @GetMapping("/movimientos/{numeroCuenta}")
+    public ResponseEntity<List<com.nexus.ms_transacciones.dto.MovimientoDTO>> obtenerMovimientos(
+            @PathVariable String numeroCuenta) {
+        try {
+            List<com.nexus.ms_transacciones.dto.MovimientoDTO> movimientos = transaccionService
+                    .obtenerMovimientosPorCuenta(numeroCuenta);
+            return ResponseEntity.ok(movimientos);
+        } catch (Exception e) {
+            log.error("Error obteniendo movimientos: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PostMapping("/devoluciones")
     public ResponseEntity<?> iniciarDevolucion(@RequestBody Map<String, String> payload) {
         String originalTxId = payload.get("originalTxId");
         String motivo = payload.getOrDefault("motivo", "AC04"); // Código ISO default (Closed Account)
 
         log.info(">>> Iniciando devolución manual (pacs.004) para TX: {}", originalTxId);
-        Transaccion txLocal = transaccionRepository.findByInstructionId(originalTxId)
-                .orElseThrow(() -> new RuntimeException("Transacción original no encontrada"));
-        IsoMensajeDTO isoReturn = new IsoMensajeDTO();
-        isoReturn.setHeader(IsoMensajeDTO.IsoHeader.builder()
-                .messageId("RET-" + UUID.randomUUID())
-                .creationDateTime(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
-                .originatingBankId(bancoCodigo)
-                .build());
-        isoReturn.setBody(IsoMensajeDTO.IsoBody.builder()
-                .instructionId(UUID.randomUUID().toString()) 
-                .originalInstructionId(originalTxId)         
-                .returnReason(motivo)
-                .amount(IsoMensajeDTO.IsoAmount.builder()
-                        .currency("USD")
-                        .value(txLocal.getMonto())
-                        .build())
-                .build());
 
         try {
-            switchClient.enviarDevolucion(isoReturn);
-            txLocal.setEstado("RETURNING");
-            transaccionRepository.save(txLocal);
-            return ResponseEntity.ok(Map.of("message", "Solicitud de devolución enviada al Switch"));
+            // Convertir String a UUID si es necesario, o manejar string directo en servicio
+            // si se cambia
+            // Por ahora asumimos que el instructionId es un UUID válido
+            UUID uuidInstruccion = UUID.fromString(originalTxId);
+
+            transaccionService.iniciarDevolucion(uuidInstruccion, motivo);
+
+            return ResponseEntity.ok(Map.of("message", "Solicitud de devolución enviada al Switch correctamente"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("El ID de transacción no tiene un formato válido (UUID)");
         } catch (Exception e) {
             log.error("Error enviando devolución: {}", e.getMessage());
             return ResponseEntity.internalServerError().body("Error al procesar devolución: " + e.getMessage());
@@ -205,17 +208,42 @@ public class CoreVentanillaController {
                     if (req.getCuentaDestino() == null || req.getCuentaDestino().isEmpty()) {
                         throw new RuntimeException("Cuenta destino requerida para transferencias");
                     }
-                    try {
-                        String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
-                        restTemplate.getForObject(urlValidar, Map.class);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Cuenta destino no existe");
-                    }
 
-                    cuentaClient.debitar(req.getCuentaOrigen(), req.getMonto());
-                    cuentaClient.acreditar(req.getCuentaDestino(), req.getMonto());
-                    transaccionService.guardarTransaccionVentanilla(req, "TRANSFERENCIA", req.getCuentaDestino());
-                    return ResponseEntity.ok("TXN-TRF-" + System.currentTimeMillis());
+                    // Si viene bancoDestino y es diferente al mío, es Interbancaria
+                    String bancoDest = req.getBancoDestino();
+                    boolean esInterbancaria = bancoDest != null && !bancoDest.isEmpty()
+                            && !bancoDest.equals(bancoCodigo) && !bancoDest.equals("ECUASOL"); // Asumimos ECUASOL =
+                                                                                               // NEXUS for legacy or
+                                                                                               // check exact code
+
+                    if (esInterbancaria) {
+                        log.info(">>> Iniciando Transferencia INTERBANCARIA hacia {}", bancoDest);
+                        // Delegar a TransaccionService para que use SwitchClient
+
+                        SolicitudTransferenciaDTO txDto = new SolicitudTransferenciaDTO();
+                        txDto.setCuentaOrigen(req.getCuentaOrigen());
+                        txDto.setCuentaDestino(req.getCuentaDestino());
+                        txDto.setMonto(req.getMonto());
+                        txDto.setBancoDestinoCodigo(bancoDest);
+                        txDto.setDescripcion(req.getDescripcion());
+
+                        transaccionService.realizarTransferencia(txDto);
+                        return ResponseEntity.ok("TXN-SW-" + System.currentTimeMillis());
+
+                    } else {
+                        // LOCAL
+                        try {
+                            String urlValidar = cuentasUrl + "/api/v1/cuentas/por-numero/" + req.getCuentaDestino();
+                            restTemplate.getForObject(urlValidar, Map.class);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Cuenta destino no existe");
+                        }
+
+                        cuentaClient.debitar(req.getCuentaOrigen(), req.getMonto());
+                        cuentaClient.acreditar(req.getCuentaDestino(), req.getMonto());
+                        transaccionService.guardarTransaccionVentanilla(req, "TRANSFERENCIA", req.getCuentaDestino());
+                        return ResponseEntity.ok("TXN-TRF-" + System.currentTimeMillis());
+                    }
 
                 default:
                     throw new RuntimeException("Tipo de operación no válido: " + tipo);
@@ -252,7 +280,8 @@ public class CoreVentanillaController {
     }
 
     private String obtenerNombreTipoCuenta(Integer tipoCuentaId) {
-        if (tipoCuentaId == null) return "Cuenta";
+        if (tipoCuentaId == null)
+            return "Cuenta";
         try {
             String url = cuentasUrl + "/api/tipos-cuenta/" + tipoCuentaId;
             Map<String, Object> tipo = restTemplate.getForObject(url, Map.class);
