@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bancaService } from '@/services/bancaService';
 import { MovimientoDTO, CuentaDTO } from '@/types';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatDateShortEcuador, formatTimeEcuador } from '@/utils/formatters';
 import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Calendar, Download, Filter, Search, RotateCcw } from 'lucide-react';
 import { Boton } from '@/components/common/Boton';
 import { ReturnModal } from '@/components/common/ReturnModal';
@@ -17,8 +17,13 @@ const groupByWeek = (movimientos: MovimientoDTO[]): MovimientoAgrupado[] => {
     const grupos: { [key: string]: MovimientoDTO[] } = {};
 
     const formatDay = (date: Date) => {
-        const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('es-ES', options).replace(/\./g, '');
+        const options: Intl.DateTimeFormatOptions = {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'America/Guayaquil'
+        };
+        return date.toLocaleDateString('es-EC', options).replace(/\./g, '');
     };
 
     movimientos.forEach(mov => {
@@ -150,9 +155,8 @@ const PaginaDetalleCuenta = () => {
         const SignoIcon = esCredito ? ArrowDownLeft : ArrowUpRight;
         const tipoTexto = esCredito ? 'Ingreso' : 'Egreso';
 
-        const fecha = new Date(mov.fecha);
-        const fechaFormat = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
-        const horaFormat = fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const fechaFormat = formatDateShortEcuador(mov.fecha);
+        const horaFormat = formatTimeEcuador(mov.fecha);
 
         // Etiqueta de operación basada en tipo funcional
         const operacionLabel = mov.operacion

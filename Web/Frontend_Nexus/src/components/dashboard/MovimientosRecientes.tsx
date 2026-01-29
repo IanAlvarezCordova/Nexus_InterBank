@@ -1,5 +1,5 @@
 import { MovimientoDTO } from '@/types';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatDateShortEcuador } from '@/utils/formatters';
 import { Tarjeta } from '../common/Tarjeta';
 import { ChevronRight, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 
@@ -15,10 +15,10 @@ const ItemMovimiento: React.FC<ItemMovimientoProps> = ({ movimiento }) => {
   return (
     <Tarjeta className="w-64 flex-shrink-0 border border-gray-100 mr-4">
       <div className="flex justify-between items-start mb-2">
-         <span className={`p-1 rounded ${esCredito ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {esCredito ? <ArrowDownLeft size={16}/> : <ArrowUpRight size={16}/>}
-         </span>
-         <span className="text-xs text-gray-400">{new Date(movimiento.fecha).toLocaleDateString()}</span>
+        <span className={`p-1 rounded ${esCredito ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {esCredito ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
+        </span>
+        <span className="text-xs text-gray-400">{formatDateShortEcuador(movimiento.fecha)}</span>
       </div>
       <p className="font-semibold text-sm text-gray-700 mb-1">{esCredito ? 'Depósito / Recibido' : 'Retiro / Enviado'}</p>
       <p className={`text-xl font-bold ${colorMonto}`}>
