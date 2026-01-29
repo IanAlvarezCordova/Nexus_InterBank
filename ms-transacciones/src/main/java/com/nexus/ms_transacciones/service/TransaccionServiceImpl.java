@@ -101,6 +101,11 @@ public class TransaccionServiceImpl implements TransaccionService {
                         .build());
 
                 // 3. Envío al Switch
+                log.info(
+                        "📤 Enviando al Switch - Banco Origen: {}, Banco Destino: {}, Cuenta Origen: {}, Cuenta Destino: {}",
+                        switchClient.getBancoCodigo(), bancoDestino, tx.getCuentaOrigen(), tx.getCuentaDestino());
+                log.info("📦 Payload ISO completo: {}", isoRequest);
+
                 SwitchWebhookResponse response = switchClient.enviarTransferencia(isoRequest);
 
                 if (response == null || "NACK".equals(response.getStatus())) {

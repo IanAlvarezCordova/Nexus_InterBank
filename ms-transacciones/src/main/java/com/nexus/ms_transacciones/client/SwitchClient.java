@@ -58,7 +58,9 @@ public class SwitchClient {
 
             return response.getBody();
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            log.error("Switch RECHAZÓ la transacción ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("❌ Switch RECHAZÓ la transacción ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("📋 Request URL: {}", url);
+            log.error("📋 Request Body: {}", request);
             throw new RuntimeException("Transacción Rechazada por el Switch: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Error contactando al Switch: {}", e.getMessage());
